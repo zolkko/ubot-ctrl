@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "sys.h"
 #include "mbed.h"
-#include "Thread.h"
+#include "rtos.h"
 
 #include "app_conf.h"
 #include "app.h"
@@ -26,10 +26,8 @@ DigitalOut led4(LED6);
 
 SPISlave command_spi(PA_7, PA_6, PA_5, PA_4);
 
-/*
-Queue<uint8_t, 16> command_queue;
-MemoryPool<uint8_t, 16> command_pool;
- */
+rtos::Queue<uint8_t, 16> command_queue;
+rtos::MemoryPool<uint8_t, 16> command_pool;
 
 
 /*ISR_HANDLER_SECTION
@@ -111,12 +109,17 @@ int main()
     rtos::Thread led2_thread(led_thread_func, static_cast<void *>(&led2));
     rtos::Thread led3_thread(led_thread_func, static_cast<void *>(&led3));
 
-    command_spi.reply(0xaa);
-    command_spi.format(8);
+    command_spi.reply(0x00);
+    command_spi.format(8, 1);
+
+    // TODO: enable SPI1 interrupt
+    // NVIC_SetVector(SPI_IRQn, (uint32_t) 0) ;
+    // NVIC_SetPriority(SPI_IRQn , 2);
+    NVIC_EnableIRQ(SPI1_IRQn);
 
     do {
         if (command_spi.receive()) {
-            command_spi.read();
+            volatile uint8_t data = command_spi.read();
             debug_toggle();
         }
     } while (true);
