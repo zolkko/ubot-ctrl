@@ -33,6 +33,11 @@ void SysTick_Handler(void) WEAK_DEFAULT;
 void SVC_Handler(void) WEAK_NAKED_DEFAULT;
 void PendSV_Handler(void) WEAK_NAKED_DEFAULT;
 
+void ssi1_isr_handler(void) WEAK_DEFAULT;
+void ssi2_isr_handler(void) WEAK_DEFAULT;
+void ssi3_isr_handler(void) WEAK_DEFAULT;
+
+
 /* The vector table. */
 __attribute__ ((section(".isr_vector")))
 void (* const g_pfnVectors[])(void) = {
@@ -86,7 +91,7 @@ void (* const g_pfnVectors[])(void) = {
     default_isr_handler,            // GPIO Port G
     default_isr_handler,            // GPIO Port H
     default_isr_handler,            // UART2 Rx and Tx
-    default_isr_handler,            // SSI1 Rx and Tx
+    ssi1_isr_handler,               // SSI1 Rx and Tx
     default_isr_handler,            // Timer 3 subtimer A
     default_isr_handler,            // Timer 3 subtimer B
     default_isr_handler,            // I2C1 Master and Slave
@@ -109,8 +114,8 @@ void (* const g_pfnVectors[])(void) = {
     default_isr_handler,            // GPIO Port J
     default_isr_handler,            // GPIO Port K
     default_isr_handler,            // GPIO Port L
-    default_isr_handler,            // SSI2 Rx and Tx
-    default_isr_handler,            // SSI3 Rx and Tx
+    ssi2_isr_handler,               // SSI2 Rx and Tx
+    ssi3_isr_handler,               // SSI3 Rx and Tx
     default_isr_handler,            // UART3 Rx and Tx
     default_isr_handler,            // UART4 Rx and Tx
     default_isr_handler,            // UART5 Rx and Tx

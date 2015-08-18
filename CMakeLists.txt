@@ -49,6 +49,7 @@ set(CMSIS_PATH "${MBED_PATH}/targets/cmsis")
 
 set(MBED_RTOS_PATH "${THIRD_PARTY}/mbed/libraries/rtos")
 
+
 #
 # Define linker script file
 #
@@ -117,6 +118,7 @@ add_executable(${PROJECT_NAME}.elf
     ${MBED_RTX_HW_SRC} ${MBED_RTX_SRC} ${MBED_RTOS_SRC}
     "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_M4/TOOLCHAIN_GCC/HAL_CM4.S"
     "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_M4/TOOLCHAIN_GCC/SVC_Table.S"
+    # Project source files
     ${HW_SRC} ${APP_SRC})
 
 #
