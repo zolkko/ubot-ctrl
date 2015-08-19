@@ -1,8 +1,10 @@
 
 #include <stdint.h>
 #include "sys.h"
-#include "mbed.h"
-#include "rtos.h"
+
+#include <mbed.h>
+#include <InterruptManager.h>
+#include <rtos.h>
 
 #include "app_conf.h"
 #include "app.h"
@@ -107,6 +109,8 @@ int main()
     command_spi.format(8, 1);
     command_spi.enable_it(SPI_IT_RXNE);
 
+    // InterruptManager::get()->add_handler(command_spi_handler, SPI1_IRQn);
+    // NVIC_SetVector(SPI1_IRQn, (uint32_t) command_spi_handler);
     NVIC_SetPriority(SPI1_IRQn, 2);
     NVIC_EnableIRQ(SPI1_IRQn);
 
