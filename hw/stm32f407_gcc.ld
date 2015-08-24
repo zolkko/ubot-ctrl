@@ -4,22 +4,31 @@
 
 MEMORY
 { 
-  FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 1024K
-  CCM (rwx) : ORIGIN = 0x10000000, LENGTH = 64K
-  RAM (rwx) : ORIGIN = 0x20000188, LENGTH = 128k - 0x188 
+    FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 1024K
+    CCM   (rwx) : ORIGIN = 0x10000000, LENGTH = 64K
+    /* Reserve SRAM for interrupt vectors */
+    VRAM  (rwx) : ORIGIN = 0x20000000, LENGTH = 0x188
+    RAM   (rwx) : ORIGIN = 0x20000188, LENGTH = 128k - 0x188
 }
 
 ENTRY(reset_isr_handler)
 
 SECTIONS
 {
-    .text :
+    .isr_vectors :
     {
         KEEP(*(.isr_vector))
+        . = ALIGN(0x4);
+    } > FLASH
+
+    .text :
+    {
+        . = ALIGN(0x4);
+        KEEP(*(.isr_handler))
+        *(.isr_handler.*)
 
         . = ALIGN(0x4);
-        KEEP (*(.isr_handler))
-        *(.isr_handler.*)
+        KEEP(*(.svc_table))
 
         . = ALIGN(0x4);
         *(.text*)
@@ -55,8 +64,8 @@ SECTIONS
     {
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
     } > FLASH
-    __exidx_end = .;
 
+    __exidx_end = .;
     __etext = .;
     _sidata = .;
 
@@ -65,6 +74,7 @@ SECTIONS
         __data_load__ = LOADADDR(.data);
         __data_start__ = .;
         _sdata = .;
+
         *(vtable)
         *(.data*)
 
@@ -81,7 +91,6 @@ SECTIONS
         KEEP(*(.init_array))
         PROVIDE_HIDDEN (__init_array_end = .);
 
-
         . = ALIGN(4);
         /* finit data */
         PROVIDE_HIDDEN (__fini_array_start = .);
@@ -94,7 +103,6 @@ SECTIONS
         /* All data end */
         __data_end__ = .;
         _edata = .;
-
     } > RAM
 
     .bss :
@@ -113,7 +121,8 @@ SECTIONS
     {
         __end__ = .;
         end = __end__;
-        *(.heap*)
+        __HeapBase = .;
+        KEEP(*(.heap*))
         __HeapLimit = .;
     } > RAM
 
@@ -135,3 +144,4 @@ SECTIONS
     /* Check if data + heap + stack exceeds RAM limit */
     ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
 }
+

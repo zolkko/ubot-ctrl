@@ -14,10 +14,14 @@ extern uint32_t __data_end__;
 extern uint32_t __bss_start__;
 extern uint32_t __bss_end__;
 
+HEAP_SECTION
+uint8_t heap_space[__HEAP_SIZE];
 
-/* Defined in newlibc-nano */
+STACK_SECTION
+uint8_t stack_space[__STACK_SIZE];
+
+/* Defined in newlibc-nano. the alias of _start */
 extern void _mainCRTStartup(void);
-
 
 /* Forward declaration of the default fault handlers. */
 static void default_isr_handler(void);
@@ -43,7 +47,7 @@ void spi3_isr_handler(void) WEAK_DEFAULT;
 
 /* The vector table. */
 __attribute__ ((section(".isr_vector")))
-void (* const g_pfnVectors[])(void) = {
+void (* const isr_vector_table[])(void) = {
     (void (*)(void))(&__StackTop),  // The initial stack pointer
     reset_isr_handler,              // The reset handler
     nmi_isr_handler,                // The NMI handler
@@ -60,6 +64,9 @@ void (* const g_pfnVectors[])(void) = {
     0,                              // Reserved
     PendSV_Handler,                 // The PendSV handler
     SysTick_Handler,                // The SysTick handler
+
+    /* stm32f4 specific interrupts */
+
     default_isr_handler,            // Window WatchDog
 	default_isr_handler,            // PVD through EXTI Line detection
 	default_isr_handler,            // Tamper and TimeStamps through the EXTI line
@@ -167,8 +174,20 @@ void reset_isr_handler(void)
           "    strlt   r2, [r0], #4\n"
           "    blt     zero_loop");
 
+    /* Call the clock system intitialization function.
+     * Provided by cmsis sdk. (system_stm32f4xx.c)
+     *
+     * NOTE: In order to maintain SystemCoreClock variable in sync
+     * the SystemCoreClockUpdate function must be called each time
+     * the core clock is changed.
+     */
     SystemInit();
 
+    /* Calling the crt0 'cold-start' entry point. There __libc_init_array is called
+     * and when existing hardware_init_hook() and software_init_hook() before
+     * starting main(). software_init_hook() is available and has to be called due
+     * to initializsation when using rtos.
+     */
     _mainCRTStartup();
 }
 

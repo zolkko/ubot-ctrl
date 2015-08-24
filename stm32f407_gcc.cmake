@@ -40,9 +40,13 @@ SET(CMAKE_ASM_LINK_EXECUTABLE "<CMAKE_ASM_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS>
 set(ARCH_FLAGS "-mcpu=cortex-m4 -march=armv7e-m -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16" CACHE STRING "")
 set(COMMON_FLAGS "-ffunction-sections -fdata-sections -Wall" CACHE STRING "")
 
-add_definitions("-DTOOLCHAIN_GCC -DTARGET_ARM7 -Dgcc")
-add_definitions("-D__CORTEX_M4F -DTARGET_STM32F4 -DTARGET_STM32F407 -DTARGET_F407VG")
-add_definitions("-DTOOLCHAIN_GCC -DTOOLCHAIN_GCC_ARM -DMBED_OPERATORS -D__thumb2__")
+add_definitions("-DTOOLCHAIN_GCC -DTOOLCHAIN_GCC_ARM -Dgcc")
+add_definitions("-D__CORTEX_M4F -D__thumb2__ -DTARGET_ARM7")
+add_definitions("-DTARGET_STM32F4 -DTARGET_STM32F407 -DTARGET_F407VG -DSTM32F407xx")
+# TODO: find a correct way of building mbed-rtos rtx
+#   mbed-rtos rtx for some reason does not see __FPU_PRESENT define
+#   that is set in cmsis and thus produce code which fails in very stange way
+add_definitions("-D__FPU_PRESENT -D__FPU_USED")
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
