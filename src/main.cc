@@ -5,11 +5,13 @@
 
 #include "spislave_ext.h"
 #include "pwm.h"
+#include "ctrl_fsm.h"
 
 
 DigitalOut          led1(LED3);
 DigitalOut          led4(LED6);
 ubot::SPISlaveExt   command_spi(PA_7, PA_6, PA_5, PA_4);
+ubot::control::Fsm  control_fsm;
 
 
 void led_thread_func(void const *args)
@@ -30,40 +32,19 @@ void debug_toggle(void)
 }
 
 
-static volatile uint8_t spi_d;
-rtos::Queue<uint8_t, 1> spi_q;
-
-
 extern "C" void spi1_isr_handler (void)
 {
     if (command_spi.receive()) {
-        spi_d = command_spi.read();
-        spi_q.put((unsigned char *)&spi_d);
+        control_fsm.put(command_spi.read());
     }
-}
-
-
-void spi_thread_func(void const * args)
-{
-    ubot::Pwm mpwm(PE_5);
-    osEvent e;
-
-    do {
-        e = spi_q.get();
-        if (e.status == osEventMessage) {
-            uint8_t * d = (uint8_t *)e.value.p;
-            debug_toggle();
-        } else {
-            error("Failed to get data form spi_q");
-        }
-    } while (true) ;
 }
 
 
 int main()
 {
     rtos::Thread led1_thread(led_thread_func, static_cast<void *>(&led1));
-    rtos::Thread spi_thread(spi_thread_func, nullptr, osPriorityNormal, 2048, nullptr);
+    ubot::control::event_t evt;
+    osStatus status;
 
     command_spi.reply(0x00);
     command_spi.format(8, 1);
@@ -71,10 +52,14 @@ int main()
     NVIC_EnableIRQ(SPI1_IRQn);
 
     do {
-        rtos::Thread::yield();
+        status = control_fsm.get(evt);
+        if (osEventMessage == status) {
+            debug_toggle();
+        } else {
+            error("Failed to get control event. Reason: %d", status);
+        }
     } while (true);
 
-    spi_thread.terminate();
     led1_thread.terminate();
 
     return 0;
