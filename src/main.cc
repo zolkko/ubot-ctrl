@@ -44,6 +44,7 @@ int main()
 {
     rtos::Thread led1_thread(led_thread_func, static_cast<void *>(&led1));
     ubot::control::event_t evt;
+    ubot::Pwm pwm(PA_0);
     osStatus status;
 
     command_spi.reply(0x00);
@@ -55,6 +56,9 @@ int main()
         status = control_fsm.get(evt);
         if (osEventMessage == status) {
             debug_toggle();
+
+            float dc = evt.vel.value / 2000.0f;
+            pwm.set_dc(dc);
         } else {
             error("Failed to get control event. Reason: %d", status);
         }

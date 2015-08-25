@@ -40,6 +40,7 @@ void Fsm::put(uint8_t input_data)
                         if (_event) {
                             _event->type = MSG_MOTOR_VELOCITY;
                             _event->vel.index = ubot::MOTOR_INDEX_LEFT_FRONT;
+                            _event->vel.value = 0;
                         } else {
                             error("Failed to allocate memory for new control event");
                             _state = curr->error;
