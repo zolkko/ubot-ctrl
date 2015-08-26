@@ -19,6 +19,12 @@ void ubot::Wheel::set_velocity(int16_t value)
 {
     set_direction(value);
 
+    if (value > MOTOR_MAX_SPEED) {
+        value = MOTOR_MAX_SPEED;
+    } else if (value < -MOTOR_MAX_SPEED) {
+        value = -MOTOR_MAX_SPEED;
+    }
+
     float dc = (value < 0.0f ? -value : value) / static_cast<float>(MOTOR_MAX_SPEED);
     _pwm.set_dc(dc);
 }
