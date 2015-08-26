@@ -5,6 +5,7 @@
 
 #include "spislave_ext.h"
 #include "pwm.h"
+#include "wheel.h"
 #include "ctrl_fsm.h"
 
 
@@ -43,8 +44,13 @@ extern "C" void spi1_isr_handler (void)
 int main()
 {
     rtos::Thread led1_thread(led_thread_func, static_cast<void *>(&led1));
+
     ubot::control::event_t evt;
+
+    mbed::DigitalOut ina(PB_1);
+    mbed::DigitalOut inb(PB_2);
     ubot::Pwm pwm(PA_0);
+
     osStatus status;
 
     command_spi.reply(0x00);
@@ -52,13 +58,19 @@ int main()
     command_spi.enable_it(SPI_IT_RXNE);
     NVIC_EnableIRQ(SPI1_IRQn);
 
+    ubot::Wheel wheel_left_front(pwm, ina, inb);
+
     do {
         status = control_fsm.get(evt);
         if (osEventMessage == status) {
             debug_toggle();
 
-            float dc = evt.vel.value / 2000.0f;
-            pwm.set_dc(dc);
+            if (evt.type == ubot::control::MSG_MOTOR_VELOCITY) {
+                if (evt.vel.index == ubot::MOTOR_INDEX_FRONT_LEFT) {
+                    wheel_left_front.set_velocity(evt.vel.value);
+                }
+            }
+
         } else {
             error("Failed to get control event. Reason: %d", status);
         }

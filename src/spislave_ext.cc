@@ -1,5 +1,6 @@
 
 #include <stdint.h>
+#include <mbed.h>
 #include "spislave_ext.h"
 
 

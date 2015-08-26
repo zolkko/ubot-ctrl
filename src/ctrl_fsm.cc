@@ -42,7 +42,7 @@ void Fsm::put(uint8_t input_data)
                         if (_event) {
                             _event->type = MSG_MOTOR_VELOCITY;
                             _event->crc = ubot::crc8(CRC8_INITIAL, input_data);
-                            _event->vel.index = ubot::MOTOR_INDEX_LEFT_FRONT;
+                            _event->vel.index = ubot::MOTOR_INDEX_FRONT_LEFT;
                             _event->vel.value = 0;
                         } else {
                             error("Failed to allocate memory for new control event");

@@ -2,11 +2,6 @@
 #ifndef __spislave_ext_h__
 #define __spislave_ext_h__
 
-
-#include <mbed.h>
-#include <rtos.h>
-
-
 namespace ubot
 {
 
