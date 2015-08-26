@@ -4,6 +4,7 @@
 #include <rtos.h>
 #include <mbed_error.h>
 #include "ctrl_fsm.h"
+#include "crc8.h"
 
 
 namespace ubot
@@ -23,7 +24,8 @@ static const state_t fsm[] = {
     {STATE_INDEX_CMD_READ, STATE_INDEX_CMD_READ},
     {STATE_INDEX_CMD_MSB,  STATE_INDEX_CMD_READ},
     {STATE_INDEX_CMD_LSB,  STATE_INDEX_CMD_READ},
-    {STATE_INDEX_CMD_READ, STATE_INDEX_CMD_READ},
+    {STATE_INDEX_CMD_CRC,  STATE_INDEX_CMD_READ},
+    {STATE_INDEX_CMD_READ, STATE_INDEX_CMD_READ}
 };
 
 
@@ -39,6 +41,7 @@ void Fsm::put(uint8_t input_data)
                         _event = _pool.alloc();
                         if (_event) {
                             _event->type = MSG_MOTOR_VELOCITY;
+                            _event->crc = ubot::crc8(CRC8_INITIAL, input_data);
                             _event->vel.index = ubot::MOTOR_INDEX_LEFT_FRONT;
                             _event->vel.value = 0;
                         } else {
@@ -56,12 +59,20 @@ void Fsm::put(uint8_t input_data)
             break;
 
         case STATE_INDEX_CMD_MSB:
+            _event->crc = ubot::crc8(_event->crc, input_data);
             _event->vel.value |= static_cast<int16_t>(input_data << 8);
             break;
 
         case STATE_INDEX_CMD_LSB:
             {
+                _event->crc = ubot::crc8(_event->crc, input_data);
                 _event->vel.value |= static_cast<int16_t>(input_data);
+            }
+            break;
+
+        case STATE_INDEX_CMD_CRC:
+            {
+                _event->crc = ubot::crc8(_event->crc, input_data);
 
                 osStatus status = _queue.put(_event);
                 if (osOK != status) {
@@ -99,6 +110,10 @@ osStatus Fsm::get(event_t& event)
 
             if (osOK != _pool.free(event_ptr)) {
                 error("Failed to release memory allocated for control message");
+            }
+
+            if (event.crc != 0x00) {
+                return osErrorOS;
             }
         }
     }

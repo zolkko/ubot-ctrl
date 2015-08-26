@@ -5,6 +5,7 @@
 
 #include <rtos.h>
 #include "motor_defs.h"
+#include "crc8.h"
 
 
 namespace ubot
@@ -22,7 +23,8 @@ typedef enum {
     STATE_INDEX_RESET    = 0,
     STATE_INDEX_CMD_READ = 1,
     STATE_INDEX_CMD_MSB  = 2,
-    STATE_INDEX_CMD_LSB  = 3
+    STATE_INDEX_CMD_LSB  = 3,
+    STATE_INDEX_CMD_CRC  = 4
 } state_index_t;
 
 
@@ -39,6 +41,7 @@ typedef enum {
 
 typedef struct {
     message_t type;
+    uint8_t crc;
     struct {
         ubot::motor_index_t index;
         int16_t value;
