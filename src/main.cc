@@ -5,6 +5,7 @@
 
 #include "spislave_ext.h"
 #include "pwm.h"
+#include "enc.h"
 #include "wheel.h"
 #include "ctrl_fsm.h"
 
@@ -47,19 +48,32 @@ int main()
 
     ubot::control::event_t evt;
 
-    mbed::DigitalOut ina(PB_1);
-    mbed::DigitalOut inb(PB_2);
-    ubot::Pwm pwm(PA_0);
+    // mbed::DigitalOut ina(PB_1);
+    // mbed::DigitalOut inb(PB_2);
+    // ubot::Pwm pwm(PA_0);
+    // ubot::Wheel wheel_left_front(pwm, ina, inb);
+    ubot::Enc enc(PA_0);
 
     osStatus status;
 
     command_spi.reply(0x00);
     command_spi.format(8, 1);
     command_spi.enable_it(SPI_IT_RXNE);
+
     NVIC_EnableIRQ(SPI1_IRQn);
 
-    ubot::Wheel wheel_left_front(pwm, ina, inb);
+    volatile uint32_t prev = enc.get();
+    volatile uint32_t curr = prev;
 
+    do {
+        curr = enc.get();
+        if (curr != prev) {
+            debug_toggle();
+        }
+        rtos::Thread::yield();
+    } while (true);
+
+    /*
     do {
         status = control_fsm.get(evt);
         if (osEventMessage == status) {
@@ -67,7 +81,7 @@ int main()
 
             if (evt.type == ubot::control::MSG_MOTOR_VELOCITY) {
                 if (evt.vel.index == ubot::MOTOR_INDEX_FRONT_LEFT) {
-                    wheel_left_front.set_velocity(evt.vel.value);
+                    // wheel_left_front.set_velocity(evt.vel.value);
                 }
             }
 
@@ -75,6 +89,7 @@ int main()
             error("Failed to get control event. Reason: %d", status);
         }
     } while (true);
+     */
 
     led1_thread.terminate();
 
