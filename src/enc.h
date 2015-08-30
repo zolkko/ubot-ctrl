@@ -10,13 +10,32 @@ class Enc
 public:
     Enc(const PinName pin);
 
-    void set(const uint32_t value);
+    void enable_it(void);
 
-    uint32_t get(void) const;
+    void disable_it(void);
+   
+    void handle_it(void);
 
-protected:
+private:
+    bool is_update(void);
+
+    void clear_update(void);
+
+    uint32_t get_cc(void);
+   
+    bool is_cc(void);
+
+    void clear_cc(void);
+
+    bool is_of(void);
+
+    void clear_of(void);
+
     TIM_HandleTypeDef _tim;
     uint8_t _channel;
+
+    uint8_t  _values_index;
+    uint32_t _values[2];
 };
 
 } // namespace ubot

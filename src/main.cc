@@ -42,6 +42,15 @@ extern "C" void spi1_isr_handler (void)
 }
 
 
+ubot::Enc enc(PA_0);
+
+
+extern "C" void tim2_isr_handler(void)
+{
+    enc.handle_it();
+}
+
+
 int main()
 {
     rtos::Thread led1_thread(led_thread_func, static_cast<void *>(&led1));
@@ -52,24 +61,35 @@ int main()
     // mbed::DigitalOut inb(PB_2);
     // ubot::Pwm pwm(PA_0);
     // ubot::Wheel wheel_left_front(pwm, ina, inb);
-    ubot::Enc enc(PA_0);
+
+    // enc.clear_it(TIM_IT_CC1 | TIM_IT_UPDATE);
 
     osStatus status;
 
     command_spi.reply(0x00);
     command_spi.format(8, 1);
     command_spi.enable_it(SPI_IT_RXNE);
-
     NVIC_EnableIRQ(SPI1_IRQn);
 
-    volatile uint32_t prev = enc.get();
-    volatile uint32_t curr = prev;
+    enc.enable_it();
+    NVIC_EnableIRQ(TIM2_IRQn);
+
+    // volatile uint32_t curr = enc.get();
+    // volatile uint32_t prev;
 
     do {
-        curr = enc.get();
-        if (curr != prev) {
+        // prev = curr;
+
+        /*curr = enc.get();
+
+        if (curr > 0x0f) {
             debug_toggle();
-        }
+        }*/
+
+        /*if (prev != curr) {
+            debug_toggle();
+        }*/
+
         rtos::Thread::yield();
     } while (true);
 

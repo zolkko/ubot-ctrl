@@ -40,6 +40,8 @@ void SVC_Handler(void) WEAK_NAKED_DEFAULT;
 void PendSV_Handler(void) WEAK_NAKED_DEFAULT;
 void SysTick_Handler(void) WEAK_DEFAULT;
 
+void tim2_isr_handler(void) WEAK_DEFAULT;
+
 void spi1_isr_handler(void) WEAK_DEFAULT;
 void spi2_isr_handler(void) WEAK_DEFAULT;
 void spi3_isr_handler(void) WEAK_DEFAULT;
@@ -95,7 +97,7 @@ void (* const isr_vector_table[])(void) = {
 	default_isr_handler,            // TIM1 Update and TIM10
 	default_isr_handler,            // TIM1 Trigger and Commutation and TIM11
 	default_isr_handler,            // TIM1 Capture Compare
-	default_isr_handler,            // TIM2
+	tim2_isr_handler,               // TIM2
 	default_isr_handler,            // TIM3
 	default_isr_handler,            // TIM4
 	default_isr_handler,            // I2C1 Event

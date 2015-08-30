@@ -44,7 +44,8 @@ static const PinMap PinMap_ENC[] = {
 
 
 ubot::Enc::Enc(const PinName pin)
-    : _channel(0)
+    : _channel(0),
+      _values_index(0)
 {
     ENCName enc = static_cast<ENCName>(pinmap_peripheral(pin, PinMap_ENC));
     MBED_ASSERT(enc != (ENCName)NC);
@@ -80,66 +81,199 @@ ubot::Enc::Enc(const PinName pin)
 #endif
 
     uint32_t function = pinmap_function(pin, PinMap_ENC);
-    _channel = STM_PIN_CHANNEL(function);
+
+    switch (STM_PIN_CHANNEL(function)) {
+        case 1:
+            _channel = TIM_CHANNEL_1;
+            break;
+        case 2:
+            _channel = TIM_CHANNEL_2;
+            break;
+        case 3:
+            _channel = TIM_CHANNEL_3;
+            break;
+        default:
+            _channel = TIM_CHANNEL_4;
+            break;
+    }
 
     _tim.Instance = reinterpret_cast<TIM_TypeDef *>(enc);
     _tim.Init.Period = 0xffff;
-    _tim.Init.Prescaler = 0;
-    _tim.Init.CounterMode = TIM_COUNTERMODE_UP;
+    _tim.Init.Prescaler = 8000; // TODO: compute using SystemCoreClock
     _tim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    _tim.Init.CounterMode = TIM_COUNTERMODE_UP;
     _tim.Init.RepetitionCounter = 0;
 
-    // Initialize encoder interface
-    TIM_Encoder_InitTypeDef enc_init;
-
-    enc_init.IC1Polarity  = TIM_INPUTCHANNELPOLARITY_RISING;
-    enc_init.IC2Polarity  = TIM_INPUTCHANNELPOLARITY_RISING;
-    enc_init.IC1Selection = TIM_ICSELECTION_DIRECTTI;
-    enc_init.IC2Selection = TIM_ICSELECTION_DIRECTTI;
-    enc_init.IC1Prescaler = TIM_ICPSC_DIV1;
-    enc_init.IC2Prescaler = TIM_ICPSC_DIV1;
-    enc_init.IC1Filter    = 0;
-    enc_init.IC2Filter    = 0;
-
-    switch (_channel) {
-        case 1:
-            enc_init.EncoderMode = TIM_ENCODERMODE_TI1;
-            break;
-
-        case 2:
-            enc_init.EncoderMode = TIM_ENCODERMODE_TI2;
-            break;
-
-        default:
-            enc_init.EncoderMode = TIM_ENCODERMODE_TI12;
-            break;
+    if (HAL_OK != HAL_TIM_IC_Init(&_tim)) {
+        error("Failed to initialize timer in input-capture mode");
     }
 
-    HAL_TIM_Encoder_Init(&_tim, &enc_init);
-    __HAL_TIM_SetCounter(&_tim, 0);
+    TIM_IC_InitTypeDef enc_init;
+    enc_init.ICPrescaler = TIM_ICPSC_DIV1;
+	enc_init.ICFilter = 0x0;
+	enc_init.ICPolarity = TIM_ICPOLARITY_RISING;
+	enc_init.ICSelection = TIM_ICSELECTION_DIRECTTI;
 
+	if (HAL_OK != HAL_TIM_IC_ConfigChannel(&_tim, &enc_init, _channel)) {
+        error("Failed to initialize input-capture channel");
+    }
+
+    if (HAL_OK != HAL_TIM_IC_Start(&_tim, _channel)) {
+        error("Failed to start input-caputre timer");
+    }
+}
+
+
+void ubot::Enc::enable_it(void)
+{
     switch (_channel) {
-        case 1:
-            HAL_TIM_Encoder_Start(&_tim, TIM_CHANNEL_1);
+        case TIM_CHANNEL_1:
+            __HAL_TIM_ENABLE_IT(&_tim, TIM_IT_CC1);
             break;
-
-        case 2:
-            HAL_TIM_Encoder_Start(&_tim, TIM_CHANNEL_2);
+        case TIM_CHANNEL_2:
+            __HAL_TIM_ENABLE_IT(&_tim, TIM_IT_CC2);
             break;
-
+        case TIM_CHANNEL_3:
+            __HAL_TIM_ENABLE_IT(&_tim, TIM_IT_CC3);
+            break;
         default:
-            HAL_TIM_Encoder_Start(&_tim, TIM_CHANNEL_1 | TIM_CHANNEL_2);
+            __HAL_TIM_ENABLE_IT(&_tim, TIM_IT_CC4);
             break;
     }
 }
 
 
-void ubot::Enc::set(const uint32_t value) {
-    __HAL_TIM_SetCounter(&_tim, value);
+void ubot::Enc::disable_it(void)
+{
+    switch (_channel) {
+        case TIM_CHANNEL_1:
+            __HAL_TIM_DISABLE_IT(&_tim, TIM_IT_CC1);
+            break;
+        case TIM_CHANNEL_2:
+            __HAL_TIM_DISABLE_IT(&_tim, TIM_IT_CC2);
+            break;
+        case TIM_CHANNEL_3:
+            __HAL_TIM_DISABLE_IT(&_tim, TIM_IT_CC3);
+            break;
+        default:
+            __HAL_TIM_DISABLE_IT(&_tim, TIM_IT_CC4);
+            break;
+    }
 }
 
 
-uint32_t ubot::Enc::get(void) const {
-    return __HAL_TIM_GetCounter(&_tim);
+bool ubot::Enc::is_update(void)
+{
+    return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_UPDATE) != RESET;
+}
+
+
+void ubot::Enc::clear_update(void)
+{
+    __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_UPDATE);
+}
+
+
+uint32_t ubot::Enc::get_cc(void)
+{
+    return HAL_TIM_ReadCapturedValue(&_tim, _channel);
+}
+
+
+bool ubot::Enc::is_cc(void)
+{
+    switch (_channel) {
+        case TIM_CHANNEL_1:
+            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC1) != RESET;
+        case TIM_CHANNEL_2:
+            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC2) != RESET;
+        case TIM_CHANNEL_3:
+            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC3) != RESET;
+        default:
+            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC4) != RESET;
+    }
+}
+
+
+void ubot::Enc::clear_cc(void)
+{
+    switch (_channel) {
+        case TIM_CHANNEL_1:
+            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC1);
+            break;
+        case TIM_CHANNEL_2:
+            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC2);
+            break;
+        case TIM_CHANNEL_3:
+            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC3);
+            break;
+        default:
+            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC4);
+            break;
+    }
+}
+
+
+bool ubot::Enc::is_of(void)
+{
+    switch (_channel) {
+        case TIM_CHANNEL_1:
+            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC1OF) != RESET;
+        case TIM_CHANNEL_2:
+            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC2OF) != RESET;
+        case TIM_CHANNEL_3:
+            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC3OF) != RESET;
+        default:
+            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC4OF) != RESET;
+    }
+}
+
+
+void ubot::Enc::clear_of(void)
+{
+    switch (_channel) {
+        case TIM_CHANNEL_1:
+            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC1OF);
+            break;
+        case TIM_CHANNEL_2:
+            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC2OF);
+            break;
+        case TIM_CHANNEL_3:
+            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC3OF);
+            break;
+        default:
+            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC4OF);
+            break;
+    }
+}
+
+
+extern void debug_toggle(void);
+
+
+void ubot::Enc::handle_it(void)
+{
+    if (is_update()) {
+        clear_update();
+    }
+
+    if (is_cc()) {
+        _values[_values_index] = get_cc();
+        _values_index++;
+
+        if (_values[0] != 0 || _values[1] != 0) {
+            debug_toggle();
+        }
+
+        if (_values_index > 1) {
+            _values_index = 0;
+        }
+
+        clear_cc();
+    }
+
+    if (is_of()) {
+        clear_of();
+    }
 }
 
