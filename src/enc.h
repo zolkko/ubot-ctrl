@@ -32,10 +32,15 @@ private:
     void clear_of(void);
 
     TIM_HandleTypeDef _tim;
-    uint8_t _channel;
+    uint32_t _channel;
+    uint32_t _cc_it;
+    uint32_t _cc_flag;
+    uint32_t _of_flag;
 
     uint8_t  _values_index;
     uint32_t _values[2];
+
+    uint32_t _speed;
 };
 
 } // namespace ubot

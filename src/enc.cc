@@ -6,6 +6,11 @@
 #include "enc.h"
 
 
+#ifndef ENC_PRESCALER_FREQ
+#define ENC_PRESCALER_FREQ   (15000)
+#endif
+
+
 typedef enum {
 #if defined(TIM8_BASE)
     ENC_8  = (int)TIM8_BASE,
@@ -45,8 +50,12 @@ static const PinMap PinMap_ENC[] = {
 
 ubot::Enc::Enc(const PinName pin)
     : _channel(0),
-      _values_index(0)
+      _values_index(0),
+      _speed(0)
 {
+    _values[0] = 0;
+    _values[1] = 0;
+
     ENCName enc = static_cast<ENCName>(pinmap_peripheral(pin, PinMap_ENC));
     MBED_ASSERT(enc != (ENCName)NC);
 
@@ -85,21 +94,33 @@ ubot::Enc::Enc(const PinName pin)
     switch (STM_PIN_CHANNEL(function)) {
         case 1:
             _channel = TIM_CHANNEL_1;
+            _cc_it = TIM_IT_CC1;
+            _cc_flag = TIM_FLAG_CC1;
+            _of_flag = TIM_FLAG_CC1OF;
             break;
         case 2:
             _channel = TIM_CHANNEL_2;
+            _cc_it = TIM_IT_CC2;
+            _cc_flag = TIM_FLAG_CC2;
+            _of_flag = TIM_FLAG_CC2OF;
             break;
         case 3:
             _channel = TIM_CHANNEL_3;
+            _cc_it = TIM_IT_CC3;
+            _cc_flag = TIM_FLAG_CC3;
+            _of_flag = TIM_FLAG_CC3OF;
             break;
         default:
             _channel = TIM_CHANNEL_4;
+            _cc_it = TIM_IT_CC4;
+            _cc_flag = TIM_FLAG_CC4;
+            _of_flag = TIM_FLAG_CC4OF;
             break;
     }
 
     _tim.Instance = reinterpret_cast<TIM_TypeDef *>(enc);
     _tim.Init.Period = 0xffff;
-    _tim.Init.Prescaler = 8000; // TODO: compute using SystemCoreClock
+    _tim.Init.Prescaler = SystemCoreClock / ENC_PRESCALER_FREQ;
     _tim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     _tim.Init.CounterMode = TIM_COUNTERMODE_UP;
     _tim.Init.RepetitionCounter = 0;
@@ -126,39 +147,13 @@ ubot::Enc::Enc(const PinName pin)
 
 void ubot::Enc::enable_it(void)
 {
-    switch (_channel) {
-        case TIM_CHANNEL_1:
-            __HAL_TIM_ENABLE_IT(&_tim, TIM_IT_CC1);
-            break;
-        case TIM_CHANNEL_2:
-            __HAL_TIM_ENABLE_IT(&_tim, TIM_IT_CC2);
-            break;
-        case TIM_CHANNEL_3:
-            __HAL_TIM_ENABLE_IT(&_tim, TIM_IT_CC3);
-            break;
-        default:
-            __HAL_TIM_ENABLE_IT(&_tim, TIM_IT_CC4);
-            break;
-    }
+    __HAL_TIM_ENABLE_IT(&_tim, _cc_it);
 }
 
 
 void ubot::Enc::disable_it(void)
 {
-    switch (_channel) {
-        case TIM_CHANNEL_1:
-            __HAL_TIM_DISABLE_IT(&_tim, TIM_IT_CC1);
-            break;
-        case TIM_CHANNEL_2:
-            __HAL_TIM_DISABLE_IT(&_tim, TIM_IT_CC2);
-            break;
-        case TIM_CHANNEL_3:
-            __HAL_TIM_DISABLE_IT(&_tim, TIM_IT_CC3);
-            break;
-        default:
-            __HAL_TIM_DISABLE_IT(&_tim, TIM_IT_CC4);
-            break;
-    }
+    __HAL_TIM_DISABLE_IT(&_tim, _cc_it);
 }
 
 
@@ -182,73 +177,26 @@ uint32_t ubot::Enc::get_cc(void)
 
 bool ubot::Enc::is_cc(void)
 {
-    switch (_channel) {
-        case TIM_CHANNEL_1:
-            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC1) != RESET;
-        case TIM_CHANNEL_2:
-            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC2) != RESET;
-        case TIM_CHANNEL_3:
-            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC3) != RESET;
-        default:
-            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC4) != RESET;
-    }
+    return __HAL_TIM_GET_FLAG(&_tim, _cc_flag) != RESET;
 }
 
 
 void ubot::Enc::clear_cc(void)
 {
-    switch (_channel) {
-        case TIM_CHANNEL_1:
-            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC1);
-            break;
-        case TIM_CHANNEL_2:
-            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC2);
-            break;
-        case TIM_CHANNEL_3:
-            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC3);
-            break;
-        default:
-            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC4);
-            break;
-    }
+    __HAL_TIM_CLEAR_FLAG(&_tim, _cc_flag);
 }
 
 
 bool ubot::Enc::is_of(void)
 {
-    switch (_channel) {
-        case TIM_CHANNEL_1:
-            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC1OF) != RESET;
-        case TIM_CHANNEL_2:
-            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC2OF) != RESET;
-        case TIM_CHANNEL_3:
-            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC3OF) != RESET;
-        default:
-            return __HAL_TIM_GET_FLAG(&_tim, TIM_FLAG_CC4OF) != RESET;
-    }
+    return __HAL_TIM_GET_FLAG(&_tim, _of_flag) != RESET;
 }
 
 
 void ubot::Enc::clear_of(void)
 {
-    switch (_channel) {
-        case TIM_CHANNEL_1:
-            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC1OF);
-            break;
-        case TIM_CHANNEL_2:
-            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC2OF);
-            break;
-        case TIM_CHANNEL_3:
-            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC3OF);
-            break;
-        default:
-            __HAL_TIM_CLEAR_FLAG(&_tim, TIM_FLAG_CC4OF);
-            break;
-    }
+    __HAL_TIM_CLEAR_FLAG(&_tim, _of_flag);
 }
-
-
-extern void debug_toggle(void);
 
 
 void ubot::Enc::handle_it(void)
@@ -261,11 +209,15 @@ void ubot::Enc::handle_it(void)
         _values[_values_index] = get_cc();
         _values_index++;
 
-        if (_values[0] != 0 || _values[1] != 0) {
-            debug_toggle();
-        }
-
         if (_values_index > 1) {
+            volatile uint32_t diff = 0;
+
+            if (_values[1] > _values[0]) {
+                diff = _values[1] - _values[0];
+            } else {
+                diff = (0xffff - _values[0]) + _values[1];
+            }
+
             _values_index = 0;
         }
 
