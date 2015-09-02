@@ -11,6 +11,17 @@
 #endif
 
 
+/*
+ * The desired frequency must be multiplied by factor of two
+ * because SYSCLK (depending on configuration) that clocks a timer
+ * slower than PLL by two.
+ */
+#define TIMER_DIVIDER        (ENC_PRESCALER_FREQ * 2)
+
+
+#define ENC_STEP_DISTANCE    (0.694)
+
+
 typedef enum {
 #if defined(TIM8_BASE)
     ENC_8  = (int)TIM8_BASE,
@@ -120,7 +131,7 @@ ubot::Enc::Enc(const PinName pin)
 
     _tim.Instance = reinterpret_cast<TIM_TypeDef *>(enc);
     _tim.Init.Period = 0xffff;
-    _tim.Init.Prescaler = SystemCoreClock / ENC_PRESCALER_FREQ;
+    _tim.Init.Prescaler = SystemCoreClock / TIMER_DIVIDER;
     _tim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     _tim.Init.CounterMode = TIM_COUNTERMODE_UP;
     _tim.Init.RepetitionCounter = 0;
@@ -210,13 +221,15 @@ void ubot::Enc::handle_it(void)
         _values_index++;
 
         if (_values_index > 1) {
-            volatile uint32_t diff = 0;
+            uint32_t diff = 0;
 
             if (_values[1] > _values[0]) {
                 diff = _values[1] - _values[0];
             } else {
                 diff = (0xffff - _values[0]) + _values[1];
             }
+
+            _speed = (uint16_t) ((ENC_STEP_DISTANCE * ENC_PRESCALER_FREQ) / diff);
 
             _values_index = 0;
         }

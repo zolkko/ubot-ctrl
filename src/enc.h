@@ -16,6 +16,10 @@ public:
    
     void handle_it(void);
 
+    uint32_t get_speed(void) const {
+        return _speed;
+    }
+
 private:
     bool is_update(void);
 
