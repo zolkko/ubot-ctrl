@@ -78,26 +78,38 @@ if __name__ == '__main__':
     print "Writing data into SPI"
     try:
         while True:
+            velocity = 0
+            cmd = None
             try:
-                velocity = int(raw_input('Velocity: '))
-
-                if velocity > 2000:
-                    velocity = 2000
-                elif velocity < -2000:
-                    velocity  = -2000
+                inp = raw_input('Velocity (cmd): ')
+                if inp == '<':
+                    cmd = '<'
+                else:
+                    cmd = '>'
+                    velocity = int(inp)
+                    if velocity > 2000:
+                        velocity = 2000
+                    elif velocity < -2000:
+                        velocity  = -2000
             except ValueError:
                 print 'Incorrect input'
                 continue
 
-            data = [ord(x) for x in struct.pack('>Bh', 1, velocity)]
-            crc = crc8(data, 0x00)
-            data.append(crc)
+            if cmd == '>':
+                data = [ord(x) for x in struct.pack('>Bh', 1, velocity)]
+                crc = crc8(data, 0x00)
+                data.append(crc)
+                print 'Sending velocity'
+            elif cmd == '<':
+                data = [2, 0, 0, 0]
+                print 'Reading speed'
 
             print 'Sending data: ', data, ' len= ', len(data)
             spi.CS_Low()
             spi.bulk_trans(len(data), data)
             spi.CS_High()
-
+            resp = spi.response(len(data), True)
+            print 'Response = [', resp, ']'
     except KeyboardInterrupt:
         print 'Keyboard interrupt'
 

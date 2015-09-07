@@ -14,9 +14,10 @@ public:
 
     void disable_it(void);
    
-    void handle_it(void);
+    bool handle_it(void);
 
-    uint32_t get_speed(void) const {
+    int16_t get_speed(void) const {
+        // TODO: must be atomic operation
         return _speed;
     }
 
@@ -41,10 +42,11 @@ private:
     uint32_t _cc_flag;
     uint32_t _of_flag;
 
+    uint8_t  _ovf;
     uint8_t  _values_index;
     uint32_t _values[2];
 
-    uint32_t _speed;
+    int16_t _speed;
 };
 
 } // namespace ubot

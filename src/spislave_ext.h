@@ -40,6 +40,11 @@ public:
     void clear_modflag(void);
 
     void clear_ovrflag(void);
+
+    int get(void) {
+        SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
+        return (int)s->DR;        
+    }
 };
 
 }

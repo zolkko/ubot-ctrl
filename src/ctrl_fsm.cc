@@ -7,6 +7,9 @@
 #include "crc8.h"
 
 
+extern "C" void debug_toggle(void);
+
+
 namespace ubot
 {
 
@@ -21,17 +24,19 @@ typedef struct {
 
 
 static const state_t fsm[] = {
-    {STATE_INDEX_CMD_READ, STATE_INDEX_CMD_READ},
     {STATE_INDEX_CMD_MSB,  STATE_INDEX_CMD_READ},
     {STATE_INDEX_CMD_LSB,  STATE_INDEX_CMD_READ},
     {STATE_INDEX_CMD_CRC,  STATE_INDEX_CMD_READ},
-    {STATE_INDEX_CMD_READ, STATE_INDEX_CMD_READ}
+    {STATE_INDEX_CMD_READ, STATE_INDEX_CMD_READ},
+    {STATE_INDEX_MFL_CRC,  STATE_INDEX_CMD_READ}, // STATE_INDEX_MFL_LSB
+    {STATE_INDEX_CMD_READ, STATE_INDEX_CMD_READ}  // STATE_INDEX_MFL_CRC
 };
 
 
-void Fsm::put(uint8_t input_data)
+uint8_t Fsm::put(uint8_t input_data)
 {
     const state_t * curr = &fsm[_state];
+    uint8_t result = 0xaa;
 
     switch (_state) {
         case STATE_INDEX_CMD_READ:
@@ -44,16 +49,23 @@ void Fsm::put(uint8_t input_data)
                             _event->crc = ubot::crc8(CRC8_INITIAL, input_data);
                             _event->vel.index = ubot::MOTOR_INDEX_FRONT_LEFT;
                             _event->vel.value = 0;
+
+                            _state = STATE_INDEX_CMD_MSB;
                         } else {
                             error("Failed to allocate memory for new control event");
                             _state = curr->error;
-                            return;
                         }
-                        break;
+                        return result;
+
+                    case MOTOR_FRONT_LEFT_READ_SPEED:
+                        result = static_cast<uint8_t>((_speed[ubot::MOTOR_INDEX_FRONT_LEFT - 1] & 0xff00) >> 8);
+                        _crc_out = ubot::crc8(CRC8_INITIAL, result);
+                        _state = STATE_INDEX_MFL_LSB;
+                        return result;
 
                     default:
                         _state = curr->error;
-                        return;
+                        return result;
                 }
             }
             break;
@@ -82,19 +94,35 @@ void Fsm::put(uint8_t input_data)
                     error("Failed to send new control event. Reason: %d", status);
                     _state = curr->error;
 
-                    return;
+                    return result;
                 }
 
                 _event = nullptr;
             }
             break;
 
+        case STATE_INDEX_MFL_LSB:
+            {
+                result = (uint8_t)(_speed[ubot::MOTOR_INDEX_FRONT_LEFT - 1] & 0xff);
+                _crc_out = ubot::crc8(_crc_out, result);
+            }
+            break;
+
+        case STATE_INDEX_MFL_CRC:
+            {
+                result = _crc_out;
+                debug_toggle();
+            }
+            break;
+
         default:
             _state = curr->error;
-            return;
+            return result;
     }
 
     _state = curr->next;
+
+    return result;
 }
 
 

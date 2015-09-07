@@ -28,6 +28,24 @@ typedef enum {
 #define MOTOR_MAX_SPEED      (2000)
 #endif
 
+
+#ifndef ENC_PRESCALER_FREQ
+#define ENC_PRESCALER_FREQ   (15000)
+#endif
+
+
+/*
+ * The desired frequency must be multiplied by factor of two
+ * because SYSCLK (depending on configuration) that clocks a timer
+ * slower than PLL by two.
+ */
+#define ENC_TIMER_DIVIDER    (ENC_PRESCALER_FREQ * 2)
+
+
+#define ENC_STEP_DISTANCE    (0.6944)
+#define ENC_MAX_OVERFLOW     (3)
+
+
 }
 
 #endif

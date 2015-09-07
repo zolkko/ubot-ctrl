@@ -27,7 +27,7 @@ void led_thread_func(void const *args)
 }
 
 
-void debug_toggle(void)
+extern "C" void debug_toggle(void)
 {
     uint32_t value = led4.read();
     if (value) { led4.write(0); } else { led4.write(1); }
@@ -36,19 +36,23 @@ void debug_toggle(void)
 
 extern "C" void spi1_isr_handler (void)
 {
-    if (command_spi.receive()) {
-        control_fsm.put(command_spi.read());
+    if (command_spi.is_flag_set(SPI_FLAG_RXNE)) {
+        volatile uint8_t idata = command_spi.get();
+        // uint8_t output_data = control_fsm.put(input_data);
+        command_spi.reply(idata);
     }
 }
 
 
-ubot::Enc enc(PA_0);
+// ubot::Enc enc(PA_0);
 
-
+/*
 extern "C" void tim2_isr_handler(void)
 {
-    enc.handle_it();
-}
+    if (enc.handle_it()) {
+        control_fsm.set_speed(ubot::MOTOR_INDEX_FRONT_LEFT, enc.get_speed());
+    }
+}*/
 
 
 int main()
@@ -67,33 +71,13 @@ int main()
     osStatus status;
 
     command_spi.reply(0x00);
-    command_spi.format(8, 1);
+    command_spi.format(8, 0);
     command_spi.enable_it(SPI_IT_RXNE);
     NVIC_EnableIRQ(SPI1_IRQn);
 
-    enc.enable_it();
-    NVIC_EnableIRQ(TIM2_IRQn);
+    //enc.enable_it();
+    //NVIC_EnableIRQ(TIM2_IRQn);
 
-    // volatile uint32_t curr = enc.get();
-    // volatile uint32_t prev;
-
-    do {
-        // prev = curr;
-
-        /*curr = enc.get();
-
-        if (curr > 0x0f) {
-            debug_toggle();
-        }*/
-
-        /*if (prev != curr) {
-            debug_toggle();
-        }*/
-
-        rtos::Thread::yield();
-    } while (true);
-
-    /*
     do {
         status = control_fsm.get(evt);
         if (osEventMessage == status) {
@@ -109,7 +93,6 @@ int main()
             error("Failed to get control event. Reason: %d", status);
         }
     } while (true);
-     */
 
     led1_thread.terminate();
 

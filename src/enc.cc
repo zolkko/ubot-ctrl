@@ -1,25 +1,12 @@
 
+#include <stdint.h>
 #include <cmsis.h>
 #include <mbed.h>
 #include <PinNames.h>
 #include "pinmap.h"
 #include "enc.h"
+#include "motor_defs.h"
 
-
-#ifndef ENC_PRESCALER_FREQ
-#define ENC_PRESCALER_FREQ   (15000)
-#endif
-
-
-/*
- * The desired frequency must be multiplied by factor of two
- * because SYSCLK (depending on configuration) that clocks a timer
- * slower than PLL by two.
- */
-#define TIMER_DIVIDER        (ENC_PRESCALER_FREQ * 2)
-
-
-#define ENC_STEP_DISTANCE    (0.694)
 
 
 typedef enum {
@@ -61,6 +48,7 @@ static const PinMap PinMap_ENC[] = {
 
 ubot::Enc::Enc(const PinName pin)
     : _channel(0),
+      _ovf(0),
       _values_index(0),
       _speed(0)
 {
@@ -131,7 +119,7 @@ ubot::Enc::Enc(const PinName pin)
 
     _tim.Instance = reinterpret_cast<TIM_TypeDef *>(enc);
     _tim.Init.Period = 0xffff;
-    _tim.Init.Prescaler = SystemCoreClock / TIMER_DIVIDER;
+    _tim.Init.Prescaler = SystemCoreClock / ENC_TIMER_DIVIDER;
     _tim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     _tim.Init.CounterMode = TIM_COUNTERMODE_UP;
     _tim.Init.RepetitionCounter = 0;
@@ -210,10 +198,26 @@ void ubot::Enc::clear_of(void)
 }
 
 
-void ubot::Enc::handle_it(void)
+bool ubot::Enc::handle_it(void)
 {
+    bool result = false;
+
     if (is_update()) {
         clear_update();
+
+       _ovf++;
+
+        if (_ovf > ENC_MAX_OVERFLOW) {
+            _values_index = 0;
+            _values[0] = 0;
+            _values[1] = 0;
+            _ovf = 0;
+
+            if (_speed != 0) {
+                _speed = 0;
+                result = true;
+            }
+        }
     }
 
     if (is_cc()) {
@@ -229,7 +233,15 @@ void ubot::Enc::handle_it(void)
                 diff = (0xffff - _values[0]) + _values[1];
             }
 
-            _speed = (uint16_t) ((ENC_STEP_DISTANCE * ENC_PRESCALER_FREQ) / diff);
+            if (_ovf > 1) {
+                diff += 0xffff * (_ovf - 1);
+            }
+
+            int16_t speed = static_cast<uint16_t>((ENC_STEP_DISTANCE * ENC_PRESCALER_FREQ) / diff);
+            if (speed != _speed) {
+                _speed = speed; // TODO: must be atomic operation
+                result = true;
+            }
 
             _values_index = 0;
         }
@@ -240,5 +252,7 @@ void ubot::Enc::handle_it(void)
     if (is_of()) {
         clear_of();
     }
+
+    return result;
 }
 
