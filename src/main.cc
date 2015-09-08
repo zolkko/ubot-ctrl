@@ -12,7 +12,7 @@
 
 DigitalOut          led1(LED3);
 DigitalOut          led4(LED6);
-ubot::SPISlaveExt   command_spi(PA_7, PA_6, PA_5, PA_4);
+ubot::SPISlaveExt   command_spi(PA_7, PB_4, PA_5, PA_4);
 ubot::control::Fsm  control_fsm;
 
 
@@ -35,16 +35,23 @@ extern "C" void debug_toggle(void)
 
 
 extern "C" void spi1_isr_handler (void)
-{
-    if (command_spi.is_flag_set(SPI_FLAG_RXNE)) {
-        volatile uint8_t idata = command_spi.get();
-        // uint8_t output_data = control_fsm.put(input_data);
-        command_spi.reply(idata);
+{   
+    static volatile uint32_t idata = 0;
+
+    uint32_t flags = command_spi.get_flags();
+
+    if ((flags & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
+        idata = command_spi.get();
+    }
+
+    if ((flags & SPI_FLAG_TXE) == SPI_FLAG_TXE) {
+        command_spi.set(~idata);
     }
 }
 
 
 // ubot::Enc enc(PA_0);
+
 
 /*
 extern "C" void tim2_isr_handler(void)
@@ -52,7 +59,8 @@ extern "C" void tim2_isr_handler(void)
     if (enc.handle_it()) {
         control_fsm.set_speed(ubot::MOTOR_INDEX_FRONT_LEFT, enc.get_speed());
     }
-}*/
+}
+ */
 
 
 int main()
@@ -70,9 +78,8 @@ int main()
 
     osStatus status;
 
-    command_spi.reply(0x00);
     command_spi.format(8, 0);
-    command_spi.enable_it(SPI_IT_RXNE);
+    command_spi.enable_it(SPI_IT_RXNE | SPI_IT_TXE);
     NVIC_EnableIRQ(SPI1_IRQn);
 
     //enc.enable_it();

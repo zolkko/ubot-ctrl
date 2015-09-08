@@ -33,18 +33,11 @@ public:
      * SPI_FLAG_FTLVL: SPI fifo transmission level
      * SPI_FLAG_FRLVL: SPI fifo reception level
      */
-    bool is_flag_set(uint32_t flag);
+    uint32_t get_flags(void);
 
-    void clear_freflag(void);
+    uint8_t get(void);
 
-    void clear_modflag(void);
-
-    void clear_ovrflag(void);
-
-    int get(void) {
-        SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
-        return (int)s->DR;        
-    }
+    void set(uint8_t data);
 };
 
 }

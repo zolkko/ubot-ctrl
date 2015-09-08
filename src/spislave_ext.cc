@@ -16,48 +16,23 @@ void ubot::SPISlaveExt::disable_it(uint32_t flags)
 }
 
 
-bool ubot::SPISlaveExt::is_flag_set(uint32_t flag)
+uint32_t ubot::SPISlaveExt::get_flags(void)
 {
     SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
-
-    return ((s->SR) & flag) == flag;
+    return s->SR;
 }
 
 
-void ubot::SPISlaveExt::clear_freflag(void)
+uint8_t ubot::SPISlaveExt::get(void)
 {
     SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
-
-    do {
-        __IO uint32_t tmpreg;
-        tmpreg = s->SR;
-        UNUSED(tmpreg);
-    } while (0);
+    return (uint8_t)(s->DR);
 }
 
 
-void ubot::SPISlaveExt::clear_modflag(void)
+void ubot::SPISlaveExt::set(uint8_t data)
 {
     SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
-
-    do {
-        __IO uint32_t tmpreg;
-        tmpreg = s->SR;
-        s->CR1 &= (~SPI_CR1_SPE);
-        UNUSED(tmpreg);
-    } while (0);
-}
-
-
-void ubot::SPISlaveExt::clear_ovrflag(void)
-{
-    SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
-
-    do {
-        __IO uint32_t tmpreg;
-        tmpreg = s->DR;
-        tmpreg = s->SR;
-        UNUSED(tmpreg);
-    } while (0);
+    s->DR = data;
 }
 
