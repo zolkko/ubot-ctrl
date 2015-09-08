@@ -36,7 +36,7 @@ static const state_t fsm[] = {
 uint8_t Fsm::put(uint8_t input_data)
 {
     const state_t * curr = &fsm[_state];
-    uint8_t result = 0xaa;
+    uint8_t result = 0;
 
     switch (_state) {
         case STATE_INDEX_CMD_READ:

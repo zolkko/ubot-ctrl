@@ -3,7 +3,7 @@
 
 import sys
 import struct
-from pyBusPirateLite.SPI import *
+import serial
 
 
 crc8_lut = (
@@ -35,47 +35,9 @@ def crc8(data, initial_crc):
 
 
 if __name__ == '__main__':
-    #crc = crc8([1,2,3], 0x00)
-    #print 'CRC = ', crc
-    #print 'TESTED = ', crc8([1,2,3, crc], 0x00)
-    # sys.exit()
-
     data = ""
 
-    spi = SPI("/dev/tty.usbserial-A600eHG0", 115200)
-
-    print "Entering binmode: ",
-    if spi.BBmode():
-        print "OK."
-    else:
-        print "failed."
-        sys.exit()
-
-    print "Entering raw SPI mode: ",
-    if spi.enter_SPI():
-        print "OK."
-    else:
-        print "failed."
-        sys.exit()
-
-    if spi.set_speed(SPISpeed._30KHZ) != 0x01:
-        print "Failed to set SPI Speed."
-        sys.exit()
-
-    spi.timeout(0.2)
-
-    if spi.cfg_spi(SPICfg.OUT_TYPE | SPICfg.CLK_EDGE) != 0x01:
-        print "Failed to set SPI configuration.";
-        sys.exit()
-
-    spi.timeout(0.2)
-
-    print "Configuring SPI."
-    if spi.cfg_pins(PinCfg.POWER | PinCfg.CS | PinCfg.AUX) != 0x01:
-        print "Failed to set SPI peripherals."
-        sys.exit()
-
-    print "Writing data into SPI"
+    ser = serial.Serial("/dev/tty.usbmodem0E2063E1", 115200)
     try:
         while True:
             velocity = 0
@@ -99,24 +61,19 @@ if __name__ == '__main__':
                 data = [ord(x) for x in struct.pack('>Bh', 1, velocity)]
                 crc = crc8(data, 0x00)
                 data.append(crc)
-                print 'Sending velocity'
+                print 'Sending velocity.',
             elif cmd == '<':
                 data = [2, 0, 0, 0]
-                print 'Reading speed'
+                print 'Reading speed.',
 
             print 'Sending data: ', data, ' len= ', len(data)
-            spi.CS_Low()
-            spi.bulk_trans(len(data), data)
-            spi.CS_High()
-            resp = spi.response(len(data), True)
-            print 'Response = [', resp, ']'
+
+            ser.write(data)
+            resp = ser.read(len(data))
+
+            print 'Response = [', [ord(i) for i in resp], ']'
     except KeyboardInterrupt:
         print 'Keyboard interrupt'
-
-    print "Reset Bus Pirate to user terminal: ",
-    if spi.resetBP():
-        print "OK."
-    else:
-        print "failed."
-        sys.exit()
+    finally:
+        ser.close()
 
