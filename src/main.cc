@@ -11,6 +11,7 @@ DigitalOut          led4(LED6);
 
 void led_thread_func(void const *args)
 {
+
     DigitalOut * out = (DigitalOut *) args;
     while (true) {
         rtos::Thread::wait(500);

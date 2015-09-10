@@ -1,5 +1,6 @@
 
 #include <stdint.h>
+#include <atomic>
 #include <cmsis.h>
 #include <mbed.h>
 #include <PinNames.h>
@@ -49,8 +50,7 @@ static const PinMap PinMap_ENC[] = {
 ubot::Enc::Enc(const PinName pin)
     : _channel(0),
       _ovf(0),
-      _values_index(0),
-      _speed(0)
+      _values_index(0)
 {
     _values[0] = 0;
     _values[1] = 0;
@@ -237,9 +237,9 @@ bool ubot::Enc::handle_it(void)
                 diff += 0xffff * (_ovf - 1);
             }
 
-            int16_t speed = static_cast<uint16_t>((ENC_STEP_DISTANCE * ENC_PRESCALER_FREQ) / diff);
+            int16_t speed = (ENC_STEP_DISTANCE * ENC_PRESCALER_FREQ) / diff;
             if (speed != _speed) {
-                _speed = speed; // TODO: must be atomic operation
+                _speed.store(speed);
                 result = true;
             }
 

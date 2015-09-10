@@ -2,6 +2,10 @@
 #ifndef __enc_h__
 #define __enc_h__
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <atomic>
+
 namespace ubot
 {
 
@@ -10,6 +14,19 @@ class Enc
 public:
     Enc(const PinName pin);
 
+    Enc(const Enc& enc)
+        : _tim(enc._tim),
+          _channel(enc._channel),
+          _cc_it(enc._cc_it),
+          _cc_flag(enc._cc_flag),
+          _of_flag(enc._of_flag),
+          _ovf(enc._ovf),
+          _values_index(enc._values_index)
+    {
+        memcpy(_values, enc._values, sizeof(_values));
+        _speed.store(enc._speed.load());
+    }
+
     void enable_it(void);
 
     void disable_it(void);
@@ -17,8 +34,7 @@ public:
     bool handle_it(void);
 
     int16_t get_speed(void) const {
-        // TODO: must be atomic operation
-        return _speed;
+        return _speed.load();
     }
 
 private:
@@ -46,7 +62,7 @@ private:
     uint8_t  _values_index;
     uint32_t _values[2];
 
-    int16_t _speed;
+    std::atomic_short _speed;
 };
 
 } // namespace ubot
