@@ -29,6 +29,11 @@ typedef enum {
 #endif
 
 
+#define MOTOR_PID_PARAM_KP   (100)
+#define MOTOR_PID_PARAM_KI   (0.025)
+#define MOTOR_PID_PARAM_KD   (20)
+
+
 #ifndef ENC_PRESCALER_FREQ
 #define ENC_PRESCALER_FREQ   (15000)
 #endif
@@ -44,7 +49,6 @@ typedef enum {
 
 #define ENC_STEP_DISTANCE    (0.6944)
 #define ENC_MAX_OVERFLOW     (3)
-
 
 }
 

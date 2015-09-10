@@ -45,8 +45,10 @@ set(HW_PATH "${PROJECT_SOURCE_DIR}/hw")
 set(THIRD_PARTY "${PROJECT_SOURCE_DIR}/third_party")
 
 set(MBED_PATH "${THIRD_PARTY}/mbed/libraries/mbed")
+set(DSP_PATH "${THIRD_PARTY}/mbed/libraries/dsp")
 set(CMSIS_PATH "${MBED_PATH}/targets/cmsis")
 
+set(DSP_PID_PATH "${DSP_PATH}/cmsis_dsp/ControllerFunctions")
 set(MBED_RTOS_PATH "${THIRD_PARTY}/mbed/libraries/rtos")
 
 
@@ -83,6 +85,11 @@ include_directories("${MBED_PATH}/targets/hal/TARGET_${VENDOR_NAME}/TARGET_${VEN
 #
 include_directories("${MBED_RTOS_PATH}/rtos")
 include_directories("${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M")
+
+#
+# MBED Math
+#
+include_directories("${DSP_PATH}/cmsis_dsp")
 
 #
 # MBED sdk and CMSIS source files
@@ -123,6 +130,17 @@ aux_source_directory("${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M" MBED_RTX_SRC)
 aux_source_directory("${MBED_RTOS_PATH}/rtos" MBED_RTOS_SRC)
 
 #
+# DSP library source files
+#
+aux_source_directory("${DSP_PID_PATH}" MBED_DSP_SRC)
+list(REMOVE_ITEM MBED_DSP_SRC "${DSP_PID_PATH}/arm_pid_init_q15.c")
+list(REMOVE_ITEM MBED_DSP_SRC "${DSP_PID_PATH}/arm_pid_init_q31.c")
+list(REMOVE_ITEM MBED_DSP_SRC "${DSP_PID_PATH}/arm_pid_reset_q15.c")
+list(REMOVE_ITEM MBED_DSP_SRC "${DSP_PID_PATH}/arm_pid_reset_q31.c")
+list(REMOVE_ITEM MBED_DSP_SRC "${DSP_PID_PATH}/arm_sin_cos_f32.c")
+list(REMOVE_ITEM MBED_DSP_SRC "${DSP_PID_PATH}/arm_sin_cos_q31.c")
+
+#
 # Search for source files and add them to
 # the NAMED lists.
 #
@@ -136,9 +154,12 @@ aux_source_directory("${SRC_PATH}" APP_SRC)
 add_executable(${PROJECT_NAME}.elf
     ${MBED_CMSIS_SRC} ${MBED_CMSIS_VENDOR_SRC}
     ${MBED_HAL_SRC} ${MBED_HAL_BRD_SRC} ${MBED_COMMON_SRC}
+    # MBED-class rtos (RTX)
     ${MBED_RTX_HW_SRC} ${MBED_RTX_SRC} ${MBED_RTOS_SRC}
     "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_M4/TOOLCHAIN_GCC/HAL_CM4.S"
     "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_M4/TOOLCHAIN_GCC/SVC_Table.S"
+    # MBED ARM Math
+    ${MBED_DSP_SRC}
     # Project source files
     ${HW_SRC} ${APP_SRC})
 

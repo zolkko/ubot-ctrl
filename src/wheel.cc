@@ -1,10 +1,25 @@
 
 #include <stdint.h>
 #include <mbed.h>
+#include <arm_math.h>
 #include "pwm.h"
 #include "enc.h"
 #include "wheel.h"
 #include "motor_defs.h"
+
+
+#ifndef MOTOR_PID_PARAM_KP
+#error  MOTOR_PID_PARAM_KP proportional coeficient must be set
+#endif
+
+#ifndef MOTOR_PID_PARAM_KI
+#error  MOTOR_PID_PARAM_KI integral coeficient must be set
+#endif
+
+
+#ifndef MOTOR_PID_PARAM_KD
+#error  MOTOR_PID_PARAM_KD derivative coeficient must be set
+#endif
 
 
 ubot::Wheel::Wheel(const ubot::Pwm& pwm,
@@ -17,6 +32,11 @@ ubot::Wheel::Wheel(const ubot::Pwm& pwm,
       _enc(enc),
       _direction(DIRECTION_NONE)
 {
+    _pid.Kp = MOTOR_PID_PARAM_KP;
+    _pid.Ki = MOTOR_PID_PARAM_KI;
+    _pid.Kd = MOTOR_PID_PARAM_KD;
+
+    arm_pid_init_f32(&_pid, 1);
 }
 
 
@@ -62,5 +82,12 @@ void ubot::Wheel::set_direction(int16_t value)
         _inb = 1;
         _direction = DIRECTION_BACK;
     }
+}
+
+
+void ubot::Wheel::step(void)
+{
+    float pid_error = 0.0f;
+    arm_pid_f32(&_pid, pid_error);
 }
 

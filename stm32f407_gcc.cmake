@@ -48,6 +48,9 @@ add_definitions("-DTARGET_STM32F4 -DTARGET_STM32F407 -DTARGET_F407VG -DSTM32F407
 #   that is set in cmsis and thus produce code which fails in very stange way
 add_definitions("-D__FPU_PRESENT -D__FPU_USED")
 
+# Definition for MBED ARM Math library
+add_definitions("-DARM_MATH_CM4")
+
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)

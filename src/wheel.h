@@ -25,6 +25,8 @@ public:
 
     int16_t get_velocity(void);
 
+    void step(void);
+
 private:
 
     void set_direction(int16_t value);
@@ -36,6 +38,8 @@ private:
     Enc _enc;
 
     direction_t _direction;
+
+    arm_pid_instance_f32 _pid;
 };
 
 } // namespace ubot
