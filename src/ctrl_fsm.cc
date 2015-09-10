@@ -55,6 +55,11 @@ uint8_t Fsm::put(uint8_t input_data)
                             error("Failed to allocate memory for new control event");
                             _state = curr->error;
                         }
+
+                        _crc_out = ubot::crc8(CRC8_INITIAL, 0);
+
+                        result = static_cast<uint8_t>((_speed[_event->vel.index - 1] & 0xff00) >> 8);
+                        _crc_out = ubot::crc8(_crc_out, result);
                         return result;
 
                     case MOTOR_FRONT_LEFT_READ_SPEED:
@@ -73,13 +78,16 @@ uint8_t Fsm::put(uint8_t input_data)
         case STATE_INDEX_CMD_MSB:
             _event->crc = ubot::crc8(_event->crc, input_data);
             _event->vel.value |= static_cast<int16_t>(input_data << 8);
+
+            result = static_cast<uint8_t>(_speed[_event->vel.index - 1] & 0xff);
+            _crc_out = ubot::crc8(_crc_out, result);
             break;
 
         case STATE_INDEX_CMD_LSB:
-            {
-                _event->crc = ubot::crc8(_event->crc, input_data);
-                _event->vel.value |= static_cast<int16_t>(input_data);
-            }
+            _event->crc = ubot::crc8(_event->crc, input_data);
+            _event->vel.value |= static_cast<int16_t>(input_data);
+
+            result = _crc_out;
             break;
 
         case STATE_INDEX_CMD_CRC:
