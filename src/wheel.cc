@@ -37,7 +37,7 @@ void ubot::Wheel::set_velocity(int16_t value)
 
 int16_t ubot::Wheel::get_velocity(void)
 {
-    int16_t velocity = _enc.get();
+    int16_t velocity = 0; // _enc.get();
 
     if (_direction == DIRECTION_BACK) {
         velocity = -velocity;

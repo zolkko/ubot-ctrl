@@ -2,13 +2,15 @@
 #ifndef __controlif_h__
 #define __controlif_h__
 
+#include "ctrl_fsm.h"
+
 namespace ubot
 {
 
-class Control : public SPISlave
+class Control
 {
 public:
-    ControlIf(PinName mosi, PinName miso, PinName clk, PinName cs);
+    Control(PinName mosi, PinName miso, PinName clk, PinName cs);
 
     void enable_irq(void);
 
@@ -16,12 +18,19 @@ public:
 
     void handle_irq(void);
 
+    osStatus get_event(ubot::control::event_t& event);
+
 private:
 
-    class SPIControl : public SPISlave
+    class SPIControl
+        : public SPISlave
     {
     public:
-        SPI_TypeDef operator*(void) {
+        SPIControl(PinName mosi, PinName miso, PinName clk, PinName cs)
+            : SPISlave(mosi, miso, clk, cs) {
+        }
+
+        inline SPI_TypeDef* operator->(void) {
             SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
             return s;
         }

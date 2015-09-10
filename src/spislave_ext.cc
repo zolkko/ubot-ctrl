@@ -1,15 +1,19 @@
 
 #include <stdint.h>
 #include <mbed.h>
+#include <InterruptManager.h>
+#include <rtos.h>
+
+#include "ctrl_fsm.h"
 #include "spislave_ext.h"
 
 
 
-ubot::Control::SPISlaveExt(PinName mosi, PinName miso, PinName clk, PinName cs)
+ubot::Control::Control(PinName mosi, PinName miso, PinName clk, PinName cs)
     : _spi(mosi, miso, clk, cs)
 {
     _spi.format(8, 0);
-    _spi->DR = 0;
+   _spi->DR = 0;
 }
 
 
@@ -20,6 +24,7 @@ ubot::Control::SPISlaveExt(PinName mosi, PinName miso, PinName clk, PinName cs)
  */
 void ubot::Control::enable_irq()
 {
+    InterruptManager::get()->add_handler_front(this, &ubot::Control::handle_irq, SPI1_IRQn);
     _spi->CR2 |= SPI_IT_RXNE;
     NVIC_EnableIRQ(SPI1_IRQn);
 }
@@ -50,5 +55,11 @@ void ubot::Control::handle_irq(void)
     if ((flags & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
         _spi->DR = _fsm.put(_spi->DR);
     }
+}
+
+
+osStatus ubot::Control::get_event(ubot::control::event_t& event)
+{
+    return _fsm.get(event);
 }
 
