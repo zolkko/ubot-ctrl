@@ -13,8 +13,6 @@
 DigitalOut          led1(LED3);
 DigitalOut          led4(LED6);
 
-ubot::SPISlaveExt   command_spi(PA_7, PA_6, PA_5, PA_4);
-ubot::control::Fsm  control_fsm;
 ubot::Enc enc(PA_0);
 
 
@@ -54,32 +52,68 @@ extern "C" void spi1_isr_handler (void)
 
 extern "C" void tim2_isr_handler(void)
 {
-    if (enc.handle_it()) {
+    enc.handle_it();
+}
+
+
+void encoder_read_thread(const void * params)
+{
+    while (true) {
+        __disable_irq();
         control_fsm.set_speed(ubot::MOTOR_INDEX_FRONT_LEFT, enc.get_speed());
+        __enable_irq();
+
+        rtos::Thread::wait(10);
     }
 }
 
 
+namespace ubot
+{
+
+class App
+{
+
+public:
+    void run(void) {
+        do {
+        } while (true);
+    }
+
+private:
+    Wheel _lf;
+
+};
+
+
+
+}
+
+
+
 int main()
 {
-    rtos::Thread led1_thread(led_thread_func, static_cast<void *>(&led1));
-
-    ubot::control::event_t evt;
+    ubot::SPISlaveExt cmd_spi(PA_7, PA_6, PA_5, PA_4);
 
     mbed::DigitalOut ina(PB_1);
     mbed::DigitalOut inb(PB_2);
     ubot::Pwm pwm(PA_0);
-    ubot::Wheel wheel_left_front(pwm, ina, inb);
 
+    ubot::Wheel wheel_left_front(pwm, ina, inb, enc);
+
+    ubot::control::event_t evt;
     osStatus status;
 
-    command_spi.format(8, 0);
-    command_spi.set(0);
+
+    rtos::Thread led1_thread(led_thread_func, static_cast<void *>(&led1));
+
+
     command_spi.enable_it(SPI_IT_RXNE);
-    NVIC_EnableIRQ(SPI1_IRQn);
+
 
     enc.enable_it();
     NVIC_EnableIRQ(TIM2_IRQn);
+
 
     do {
         status = control_fsm.get(evt);
@@ -87,13 +121,13 @@ int main()
             if (evt.type == ubot::control::MSG_MOTOR_VELOCITY) {
                 if (evt.vel.index == ubot::MOTOR_INDEX_FRONT_LEFT) {
                     wheel_left_front.set_velocity(evt.vel.value);
-                    debug_toggle();
                 }
             }
         } else {
             error("Failed to get control event. Reason: %d", status);
         }
     } while (true);
+
 
     led1_thread.terminate();
 

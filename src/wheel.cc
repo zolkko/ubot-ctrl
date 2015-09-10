@@ -2,14 +2,19 @@
 #include <stdint.h>
 #include <mbed.h>
 #include "pwm.h"
+#include "enc.h"
 #include "wheel.h"
 #include "motor_defs.h"
 
 
-ubot::Wheel::Wheel(const ubot::Pwm& pwm, const mbed::DigitalOut& ina, const mbed::DigitalOut& inb)
+ubot::Wheel::Wheel(const ubot::Pwm& pwm,
+        const mbed::DigitalOut& ina,
+        const mbed::DigitalOut& inb,
+        const ubot::Enc& enc)
     : _pwm(pwm),
       _ina(ina),
       _inb(inb),
+      _enc(enc),
       _direction(DIRECTION_NONE)
 {
 }
@@ -32,9 +37,7 @@ void ubot::Wheel::set_velocity(int16_t value)
 
 int16_t ubot::Wheel::get_velocity(void)
 {
-    int16_t velocity = 0;
-
-    // TODO: read actual velocity value from quad-encoder interface.
+    int16_t velocity = _enc.get();
 
     if (_direction == DIRECTION_BACK) {
         velocity = -velocity;

@@ -18,7 +18,8 @@ class Wheel
 public:
     Wheel(const ubot::Pwm& pwm,
           const mbed::DigitalOut& ina,
-          const mbed::DigitalOut& inb);
+          const mbed::DigitalOut& inb,
+          const ubot::Enc& enc);
 
     void set_velocity(int16_t value);
 
@@ -31,6 +32,8 @@ private:
     Pwm _pwm;
     mbed::DigitalOut _ina;
     mbed::DigitalOut _inb;
+
+    Enc _enc;
 
     direction_t _direction;
 };

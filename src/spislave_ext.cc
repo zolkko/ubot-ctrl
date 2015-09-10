@@ -4,35 +4,51 @@
 #include "spislave_ext.h"
 
 
-void ubot::SPISlaveExt::enable_it(uint32_t flags)
+
+ubot::Control::SPISlaveExt(PinName mosi, PinName miso, PinName clk, PinName cs)
+    : _spi(mosi, miso, clk, cs)
 {
-    ((SPI_TypeDef *)(_spi.spi))->CR2 |= flags;
+    _spi.format(8, 0);
+    _spi->DR = 0;
 }
 
 
-void ubot::SPISlaveExt::disable_it(uint32_t flags)
+/*
+ * SPI_IT_TXE: Tx buffer empty interrupt enable
+ * SPI_IT_RXNE: RX buffer not empty interrupt enable
+ * SPI_IT_ERR: Error interrupt enable
+ */
+void ubot::Control::enable_irq()
 {
-    ((SPI_TypeDef *)(_spi.spi))->CR2 &= ~flags;
+    _spi->CR2 |= SPI_IT_RXNE;
+    NVIC_EnableIRQ(SPI1_IRQn);
 }
 
 
-uint32_t ubot::SPISlaveExt::get_flags(void)
+void ubot::Control::disable_irq()
 {
-    SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
-    return s->SR;
+    NVIC_EnableIRQ(SPI1_IRQn);
+    _spi->CR2 &= ~SPI_IT_RXNE;
 }
 
 
-uint8_t ubot::SPISlaveExt::get(void)
-{
-    SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
-    return (uint8_t)(s->DR);
-}
+/*
+ * SPI_FLAG_RXNE: Receive buffer not empty flag
+ * SPI_FLAG_TXE: Transmit buffer empty flag
+ * SPI_FLAG_CRCERR: CRC error flag
+ * SPI_FLAG_MODF: Mode fault flag
+ * SPI_FLAG_OVR: Overrun flag
+ * SPI_FLAG_BSY: Busy flag
+ * SPI_FLAG_FRE: Frame format error flag
+ * SPI_FLAG_FTLVL: SPI fifo transmission level
+ * SPI_FLAG_FRLVL: SPI fifo reception level
+ */
 
-
-void ubot::SPISlaveExt::set(uint8_t data)
+void ubot::Control::handle_irq(void)
 {
-    SPI_TypeDef * s = (SPI_TypeDef *)(_spi.spi);
-    s->DR = data;
+    uint32_t flags = _spi->SR;
+    if ((flags & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
+        _spi->DR = _fsm.put(_spi->DR);
+    }
 }
 
