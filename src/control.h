@@ -1,6 +1,6 @@
 
-#ifndef __controlif_h__
-#define __controlif_h__
+#ifndef __control_h__
+#define __control_h__
 
 #include "ctrl_fsm.h"
 

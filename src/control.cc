@@ -5,7 +5,7 @@
 #include <rtos.h>
 
 #include "ctrl_fsm.h"
-#include "spislave_ext.h"
+#include "control.h"
 
 
 

@@ -3,7 +3,7 @@
 #include <mbed.h>
 #include <rtos.h>
 
-#include "spislave_ext.h"
+#include "control.h"
 
 
 DigitalOut          led4(LED6);
