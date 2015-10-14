@@ -1,48 +1,31 @@
 
-#ifndef __wheel_h__
-#define __wheel_h__
+#ifndef UBOT_WHEEL_H
+#define UBOT_WHEEL_H
 
+#include <mbed.h>
+#include <arm_math.h>
 
 namespace ubot
 {
 
-typedef enum {
-    DIRECTION_NONE,
-    DIRECTION_BACK,
-    DIRECTION_FORTH
-} direction_t;
-
-
 class Wheel
 {
-public:
-    Wheel(const ubot::Pwm& pwm,
-          const mbed::DigitalOut& ina,
-          const mbed::DigitalOut& inb,
-          const ubot::Enc& enc);
-
-    void set_velocity(int16_t value);
-
-    int16_t get_velocity(void);
-
-    void step(void);
-
 private:
-
-    void set_direction(int16_t value);
-
-    Pwm _pwm;
+    ubot::Pwm _pwm;
     mbed::DigitalOut _ina;
     mbed::DigitalOut _inb;
 
-    Enc _enc;
-
-    direction_t _direction;
-
+    int16_t _velocity;
     arm_pid_instance_f32 _pid;
+
+public:
+    Wheel(const PinName pwm_pin, const PinName ina_pin, const PinName inb_pin);
+
+    void set_velocity(int16_t value);
+
+    void step(int16_t velocity);
 };
 
 } // namespace ubot
 
-#endif // __wheel_h__
-
+#endif // UBOT_WHEEL_H

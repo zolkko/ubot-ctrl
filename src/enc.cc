@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cmsis.h>
 #include <mbed.h>
+#include <InterruptManager.h>
 #include <PinNames.h>
 #include "pinmap.h"
 #include "enc.h"
@@ -144,13 +145,15 @@ ubot::Enc::Enc(const PinName pin)
 }
 
 
-void ubot::Enc::enable_it(void)
+void ubot::Enc::enable_irq(void)
 {
+    InterruptManager::get()->add_handler_front(this, &ubot::Enc::handle_irq, TIM2_IRQn);
     __HAL_TIM_ENABLE_IT(&_tim, _cc_it);
+    NVIC_EnableIRQ(TIM2_IRQn);
 }
 
 
-void ubot::Enc::disable_it(void)
+void ubot::Enc::disable_irq(void)
 {
     __HAL_TIM_DISABLE_IT(&_tim, _cc_it);
 }
@@ -198,10 +201,8 @@ void ubot::Enc::clear_of(void)
 }
 
 
-bool ubot::Enc::handle_it(void)
+void ubot::Enc::handle_irq(void)
 {
-    bool result = false;
-
     if (is_update()) {
         clear_update();
 
@@ -215,7 +216,6 @@ bool ubot::Enc::handle_it(void)
 
             if (_speed != 0) {
                 _speed = 0;
-                result = true;
             }
         }
     }
@@ -240,7 +240,6 @@ bool ubot::Enc::handle_it(void)
             int16_t speed = (ENC_STEP_DISTANCE * ENC_PRESCALER_FREQ) / diff;
             if (speed != _speed) {
                 _speed.store(speed);
-                result = true;
             }
 
             _values_index = 0;
@@ -252,7 +251,9 @@ bool ubot::Enc::handle_it(void)
     if (is_of()) {
         clear_of();
     }
-
-    return result;
 }
 
+
+int16_t ubot::Enc::get_velocity() const {
+    return _speed.load();
+}

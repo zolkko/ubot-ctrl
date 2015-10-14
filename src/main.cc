@@ -2,83 +2,82 @@
 #include <stdint.h>
 #include <mbed.h>
 #include <rtos.h>
+#include <map>
 
+#include "eventloop.h"
 #include "control.h"
+#include "pwm.h"
+#include "enc.h"
+#include "wheel.h"
 
 
-DigitalOut          led4(LED6);
-
-
-void led_thread_func(void const *args)
+namespace ubot
 {
 
-    DigitalOut * out = (DigitalOut *) args;
-    while (true) {
-        rtos::Thread::wait(500);
-        int value = out->read();
-        if (value) { out->write(0); } else { out->write(1); }
+class MotorController
+{
+private:
+    uint8_t _index;
+    Enc * _enc;
+    Wheel * _wheel;
+    Control * _ctrl;
+
+public:
+    MotorController(uint8_t index, Enc * enc, Wheel * wheel, Control * ctrl)
+        : _index(index),
+          _enc(enc),
+          _wheel(wheel),
+          _ctrl(ctrl) {
     }
+
+    void step(void) {
+        int16_t velocity = _enc->get_velocity();
+        _wheel->step(velocity);
+        _ctrl->set_velocity(_index, velocity);
+    }
+
+    void on_velocity(const event_t * event) {
+        _wheel->set_velocity(event->payload.velocity);
+    }
+};
+
+
+void motor_feedback(const void * data)
+{
+    MotorController * feedback = reinterpret_cast<MotorController *>(const_cast<void *>(data));
+    do {
+        rtos::Thread::wait(100);
+        feedback->step();
+    } while (true);
 }
 
-
-extern "C" void debug_toggle(void)
-{
-    uint32_t value = led4.read();
-    if (value) {
-        led4.write(0);
-    } else {
-        led4.write(1);
-    }
 }
-
-
-/*extern "C" void tim2_isr_handler(void)
-{
-    enc.handle_it();
-}*/
 
 
 int main()
 {
-    DigitalOut led1(LED3);
-    rtos::Thread led1_thread(led_thread_func, static_cast<void *>(&led1));
+    ubot::EventLoop event_loop;
+    ubot::Control ctrl(PA_7, PA_6, PA_5, PA_4, &event_loop);
 
-    osStatus status;
-    ubot::control::event_t evt;
-    ubot::Control ctrl(PA_7, PA_6, PA_5, PA_4);
+    ubot::Enc enc1(PA_0);
+    ubot::Wheel wheel1(PA_1, PB_1, PB_2);
+    ubot::MotorController motor1_feedback(0, &enc1, &wheel1, &ctrl);
+    ubot::event_callback_t motor1_callback(&motor1_feedback, &ubot::MotorController::on_velocity);
+    event_loop.attach(ubot::ET_MOTOR1_VELOCITY, &motor1_callback);
 
-    /*
-    mbed::DigitalOut ina(PB_1);
-    mbed::DigitalOut inb(PB_2);
-    ubot::Pwm pwm(PA_0);
-
-    ubot::Wheel wheel_left_front(pwm, ina, inb, enc);
-
-    command_spi.enable_it(SPI_IT_RXNE);
-
-    enc.enable_it();
-    NVIC_EnableIRQ(TIM2_IRQn);
-    */
-
+    enc1.enable_irq();
     ctrl.enable_irq();
 
+    rtos::Thread motor_feedback_thread(ubot::motor_feedback, &motor1_feedback);
+
     do {
-        status = ctrl.get_event(evt);
-        if (osEventMessage == status) {
-            if (evt.type == ubot::control::MSG_MOTOR_VELOCITY) {
-                if (evt.vel.index == ubot::MOTOR_INDEX_FRONT_LEFT) {
-                    // wheel_left_front.set_velocity(evt.vel.value);
-                }
-            }
-        } else {
-            error("Failed to get control event. Reason: %d", status);
-        }
+        event_loop.iteration();
     } while (true);
 
-    ctrl.disable_irq();
+    motor_feedback_thread.terminate();
 
-    led1_thread.terminate();
+    ctrl.disable_irq();
+    enc1.disable_irq();
 
     return 0;
 }
-

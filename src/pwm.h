@@ -1,6 +1,6 @@
 
-#ifndef __pwm_h__
-#define __pwm_h__
+#ifndef UBOT_PWM_H
+#define UBOT_PWM_H
 
 namespace ubot
 {
@@ -15,5 +15,4 @@ public:
 
 }
 
-#endif
-
+#endif // UBOT_PWM_H

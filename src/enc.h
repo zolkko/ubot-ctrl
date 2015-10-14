@@ -1,10 +1,11 @@
 
-#ifndef __enc_h__
-#define __enc_h__
+#ifndef UBOT_ENC_H
+#define UBOT_ENC_H
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <atomic>
+
 
 namespace ubot
 {
@@ -27,15 +28,13 @@ public:
         _speed.store(enc._speed.load());
     }
 
-    void enable_it(void);
+    void enable_irq(void);
 
-    void disable_it(void);
+    void disable_irq(void);
    
-    bool handle_it(void);
+    void handle_irq(void);
 
-    int16_t get_speed(void) const {
-        return _speed.load();
-    }
+    int16_t get_velocity(void) const;
 
 private:
     bool is_update(void);
@@ -67,5 +66,5 @@ private:
 
 } // namespace ubot
 
-#endif // __enc_h__
+#endif // UBOT_ENC_H
 

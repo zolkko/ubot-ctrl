@@ -97,15 +97,15 @@ void (* const isr_vector_table[])(void) = {
 	default_isr_handler,            // TIM1 Update and TIM10
 	default_isr_handler,            // TIM1 Trigger and Commutation and TIM11
 	default_isr_handler,            // TIM1 Capture Compare
-	tim2_isr_handler,               // TIM2
+    0,                              // tim2_isr_handler, // TIM2
 	default_isr_handler,            // TIM3
 	default_isr_handler,            // TIM4
 	default_isr_handler,            // I2C1 Event
 	default_isr_handler,            // I2C1 Error
 	default_isr_handler,            // I2C2 Event
 	default_isr_handler,            // I2C2 Error
-	spi1_isr_handler,               // SPI1
-	spi2_isr_handler,               // SPI2
+    0,                              // SPI1
+    spi2_isr_handler,               // SPI2
 	default_isr_handler,            // USART1
 	default_isr_handler,            // USART2
 	default_isr_handler,            // USART3
@@ -120,7 +120,7 @@ void (* const isr_vector_table[])(void) = {
 	default_isr_handler,            // FSMC
 	default_isr_handler,            // SDIO
 	default_isr_handler,            // TIM5
-	spi3_isr_handler,               // SPI3
+    spi3_isr_handler,               // SPI3
 	default_isr_handler,            // UART4
 	default_isr_handler,            // UART5
 	default_isr_handler,            // TIM6 and DAC1&2 underrun errors
