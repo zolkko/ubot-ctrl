@@ -51,6 +51,8 @@ set(CMSIS_PATH "${MBED_PATH}/targets/cmsis")
 set(DSP_PID_PATH "${DSP_PATH}/cmsis_dsp/ControllerFunctions")
 set(MBED_RTOS_PATH "${THIRD_PARTY}/mbed/libraries/rtos")
 
+set(MBED_USB_DEV_PATH "${THIRD_PARTY}/mbed/libraries/USBDevice")
+
 
 #
 # Define linker script file
@@ -90,6 +92,12 @@ include_directories("${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M")
 # MBED Math
 #
 include_directories("${DSP_PATH}/cmsis_dsp")
+
+#
+# MBED USB Device
+#
+include_directories("${MBED_USB_DEV_PATH}/USBDevice")
+include_directories("${MBED_USB_DEV_PATH}/USBSerial")
 
 #
 # MBED sdk and CMSIS source files
@@ -141,6 +149,19 @@ list(REMOVE_ITEM MBED_DSP_SRC "${DSP_PID_PATH}/arm_sin_cos_f32.c")
 list(REMOVE_ITEM MBED_DSP_SRC "${DSP_PID_PATH}/arm_sin_cos_q31.c")
 
 #
+# MBED USB Device library source files
+#
+aux_source_directory("${MBED_USB_DEV_PATH}/USBDevice" MBED_USB_DEV_SRC)
+aux_source_directory("${MBED_USB_DEV_PATH}/USBSerial" MBED_USB_SER_SRC)
+list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_EFM32.cpp")
+list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_KL25Z.cpp")
+list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_LPC11U.cpp")
+list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_LPC17.cpp")
+list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_LPC40.cpp")
+list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_Maxim.cpp")
+list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_RZ_A1H.cpp")
+
+#
 # Search for source files and add them to
 # the NAMED lists.
 #
@@ -150,14 +171,17 @@ aux_source_directory("${SRC_PATH}" APP_SRC)
 #
 # Specify compilation target
 #
-
 add_executable(${PROJECT_NAME}.elf
+    # CMSIS
     ${MBED_CMSIS_SRC} ${MBED_CMSIS_VENDOR_SRC}
+    # MBED common and HAL
     ${MBED_HAL_SRC} ${MBED_HAL_BRD_SRC} ${MBED_COMMON_SRC}
-    # MBED-class rtos (RTX)
+    # MBED-rtos-classic (RTX)
     ${MBED_RTX_HW_SRC} ${MBED_RTX_SRC} ${MBED_RTOS_SRC}
     "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC/HAL_CM4.S"
     "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC/SVC_Table.S"
+    # MBED USBDevice and USBSerial
+    ${MBED_USB_DEV_SRC} ${MBED_USB_SER_SRC}
     # MBED ARM Math
     ${MBED_DSP_SRC}
     # Project source files

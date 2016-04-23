@@ -1,83 +1,35 @@
 
 #include <stdint.h>
 #include <mbed.h>
-#include <rtos.h>
-#include <map>
-
-#include "eventloop.h"
-#include "control.h"
-#include "pwm.h"
-#include "enc.h"
-#include "wheel.h"
+#include <USBSerial.h>
 
 
-namespace ubot
-{
-
-class MotorController
-{
-private:
-    uint8_t _index;
-    Enc * _enc;
-    Wheel * _wheel;
-    Control * _ctrl;
-
-public:
-    MotorController(uint8_t index, Enc * enc, Wheel * wheel, Control * ctrl)
-        : _index(index),
-          _enc(enc),
-          _wheel(wheel),
-          _ctrl(ctrl) {
-    }
-
-    void step(void) {
-        int16_t velocity = _enc->get_velocity();
-        _wheel->step(velocity);
-        _ctrl->set_velocity(_index, velocity);
-    }
-
-    void on_velocity(const event_t * event) {
-        _wheel->set_velocity(event->payload.velocity);
-    }
-};
-
-
-void motor_feedback(const void * data)
-{
-    MotorController * feedback = reinterpret_cast<MotorController *>(const_cast<void *>(data));
-    do {
-        rtos::Thread::wait(100);
-        feedback->step();
-    } while (true);
-}
-
-}
-
+DigitalOut led1(PD_13);
+DigitalOut led2(PD_12);
+DigitalOut led3(PD_14);
+DigitalOut led4(PD_15);
 
 int main()
 {
-    ubot::EventLoop event_loop;
-    ubot::Control ctrl(PA_7, PA_6, PA_5, PA_4, &event_loop);
+    USBSerial serial;
 
-    ubot::Enc enc1(PA_0);
-    ubot::Wheel wheel1(PA_1, PB_1, PB_2);
-    ubot::MotorController motor1_feedback(0, &enc1, &wheel1, &ctrl);
-    ubot::event_callback_t motor1_callback(&motor1_feedback, &ubot::MotorController::on_velocity);
-    event_loop.attach(ubot::ET_MOTOR1_VELOCITY, &motor1_callback);
+    while (true) {
+        led1 = 1;
+        led2 = 0;
+        led3 = 1;
+        led4 = 1;
 
-    enc1.enable_irq();
-    ctrl.enable_irq();
+        wait(0.5f);
 
-    rtos::Thread motor_feedback_thread(ubot::motor_feedback, &motor1_feedback);
+        led1 = 0;
+        led2 = 1;
+        led3 = 0;
+        led4 = 0;
 
-    do {
-        event_loop.iteration();
-    } while (true);
+        wait(0.5f);
 
-    motor_feedback_thread.terminate();
-
-    ctrl.disable_irq();
-    enc1.disable_irq();
+        serial.printf("MBED usb-serial is working...\n");
+    }
 
     return 0;
 }

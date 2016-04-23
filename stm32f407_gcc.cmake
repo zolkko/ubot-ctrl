@@ -42,7 +42,7 @@ set(COMMON_FLAGS "-ffunction-sections -fdata-sections -Wall" CACHE STRING "")
 
 add_definitions("-DTOOLCHAIN_GCC -DTOOLCHAIN_GCC_ARM -Dgcc")
 add_definitions("-D__CORTEX_M4F -D__thumb2__ -DTARGET_ARM7")
-add_definitions("-DTARGET_STM32F4 -DTARGET_STM32F407 -DTARGET_F407VG -DSTM32F407xx")
+add_definitions("-DTARGET_STM32F4 -DTARGET_STM32F407 -DTARGET_F407VG -DSTM32F407xx -DTARGET_STM32F407VG")
 # TODO: find a correct way of building mbed-rtos rtx
 #   mbed-rtos rtx for some reason does not see __FPU_PRESENT define
 #   that is set in cmsis and thus produce code which fails in very stange way
