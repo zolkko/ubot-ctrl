@@ -199,8 +199,28 @@ add_custom_target(gdbserver
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf"
     COMMENT "Run openocd gdb server")
 
+add_custom_target(gdbserver-stlink
+    COMMAND st-util -p 3333 -v -m
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf"
+    COMMENT "Run st-util gdb server")
+
+add_custom_target(gdbserver-jlink
+    COMMAND JLinkGDBServer -device stm32f407vg -if swd -speed 400
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf"
+    COMMENT "Run st-util gdb server")
+
 add_custom_target(cgdb
-    COMMAND cgdb -d ${CMAKE_GDB} -- "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf" -ex "target extended-remote :3333"
+    COMMAND cgdb -d ${CMAKE_GDB} -- "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf" -ex "target extended-remote :3333" -ex "monitor reset halt"
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf"
     COMMENT "Run cgdb session")
+
+add_custom_target(flash
+    COMMAND st-flash write "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.bin" 0x8000000
+    DEPENDS "${PROJECT_NAME}.bin"
+    COMMENT "Write binary to the controller")
+
+add_custom_target(flash-read
+    COMMAND st-flash read "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.bin" 0x8000000 0x100000
+    DEPENDS "${PROJECT_NAME}.bin"
+    COMMENT "Read binary out of the controller")
 
