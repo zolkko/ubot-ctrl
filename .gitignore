@@ -1,5 +1,4 @@
 build/
-third_party/mbed/
 *.swp
 *.swo
 *.pyc
