@@ -98,6 +98,7 @@ include_directories("${DSP_PATH}/cmsis_dsp")
 #
 include_directories("${MBED_USB_DEV_PATH}/USBDevice")
 include_directories("${MBED_USB_DEV_PATH}/USBSerial")
+include_directories("${MBED_USB_DEV_PATH}/USBHID")
 
 #
 # MBED sdk and CMSIS source files
@@ -153,6 +154,7 @@ list(REMOVE_ITEM MBED_DSP_SRC "${DSP_PID_PATH}/arm_sin_cos_q31.c")
 #
 aux_source_directory("${MBED_USB_DEV_PATH}/USBDevice" MBED_USB_DEV_SRC)
 aux_source_directory("${MBED_USB_DEV_PATH}/USBSerial" MBED_USB_SER_SRC)
+aux_source_directory("${MBED_USB_DEV_PATH}/USBHID" MBED_USB_HID_SRC)
 list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_EFM32.cpp")
 list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_KL25Z.cpp")
 list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_LPC11U.cpp")
@@ -181,7 +183,7 @@ add_executable(${PROJECT_NAME}.elf
     "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC/HAL_CM4.S"
     "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC/SVC_Table.S"
     # MBED USBDevice and USBSerial
-    ${MBED_USB_DEV_SRC} ${MBED_USB_SER_SRC}
+    ${MBED_USB_DEV_SRC} ${MBED_USB_SER_SRC} ${MBED_USB_HID_SRC}
     # MBED ARM Math
     ${MBED_DSP_SRC}
     # Project source files
@@ -247,4 +249,3 @@ add_custom_target(flash-read
     COMMAND st-flash read "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.bin" 0x8000000 0x100000
     DEPENDS "${PROJECT_NAME}.bin"
     COMMENT "Read binary out of the controller")
-
