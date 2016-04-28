@@ -5,51 +5,52 @@
 #include "usbif.h"
 
 DigitalOut led1(PD_13);
-bool led1_on = false;
 
 DigitalOut led2(PD_12);
 bool led2_on = false;
 
 DigitalOut led3(PD_14);
-DigitalOut led4(PD_15);
-
+bool led3_on = false;
 
 HID_REPORT send_report;
 HID_REPORT recv_report;
 
+#define SIZE 2
+
+static uint8_t data[SIZE];
 
 int main()
 {
-    ubot::UsbIf hid(64, 64);
-    send_report.length = 64;
-
-    uint8_t data = 123;
+    ubot::UsbIf hid(SIZE, SIZE);
+    send_report.length = SIZE;
 
     do {
         // Await usb connection
     } while (!hid.configured());
 
-    led3 = 1;
+    led1 = 1;
 
     while (1) {
         //try to read a msg
         if(hid.read(&recv_report)) {
             if (recv_report.length > 0) {
-                led1 = led1_on ? 0 : 1;
-                led1_on != led1_on;
+                led2 = led2_on ? 0 : 1;
+                led2_on != led2_on;
 
-                data = recv_report.data[0];
+                for (uint32_t i = 0; i < recv_report.length; i++) {
+                    data[i] = recv_report.data[i];
+                }
             }
 
             //Fill the report
-            for (int i = 0; i < send_report.length; i++) {
-                send_report.data[i] = data;
+            for (uint32_t i = 0; i < send_report.length; i++) {
+                send_report.data[i] = data[i];
             }
 
             //Send the report
             if (hid.send(&send_report)) {
-                // led2 = led2_on ? 0 : 1;
-                // led2_on != led2_on;
+                // led3 = led3_on ? 0 : 1;
+                // led3_on != led3_on;
             }
         }
     }

@@ -6,11 +6,9 @@
 
 namespace ubot {
 
-
 typedef struct _control_input_t {
     uint32_t speed;
 } control_input_t;
-
 
 typedef struct _control_output_t {
     uint32_t speed;
@@ -61,6 +59,10 @@ public:
          };
          return stringIproductDescriptor;
      }
+
+protected:
+    virtual bool EP1_OUT_callback();
+    virtual bool EP1_IN_callback();
 
 private:
     // HID_REPORT recv_report;
