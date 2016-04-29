@@ -2,9 +2,9 @@
 #include <mbed.h>
 #include <pwmout_api.h>
 #include "pwm.h"
-#include "motor_defs.h"
+//#include "motor_defs.h"
 
-
+/*
 ubot::Pwm::Pwm(PinName pin) : mbed::PwmOut(pin) {
     pwmout_period_us(&_pwm, MOTOR_PWM_PERIOD_US);
 }
@@ -41,4 +41,4 @@ void ubot::Pwm::set_dc(float value)
             break;
     }
 }
-
+*/

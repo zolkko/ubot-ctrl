@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <atomic>
 
-
+/*
 namespace ubot
 {
 
@@ -31,7 +31,7 @@ public:
     void enable_irq(void);
 
     void disable_irq(void);
-   
+
     void handle_irq(void);
 
     int16_t get_velocity(void) const;
@@ -42,7 +42,7 @@ private:
     void clear_update(void);
 
     uint32_t get_cc(void);
-   
+
     bool is_cc(void);
 
     void clear_cc(void);
@@ -65,6 +65,5 @@ private:
 };
 
 } // namespace ubot
-
+*/
 #endif // UBOT_ENC_H
-

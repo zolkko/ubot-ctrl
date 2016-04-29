@@ -1,57 +1,71 @@
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <mbed.h>
-#include "USBHID.h"
-#include "usbif.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "usbd_core.h"
+#include "usbd_usr.h"
+#include "usbd_desc.h"
+#include "usbd_cdc_core.h"
+#include "usbd_cdc_vcp.h"
+
+#ifdef __cplusplus
+}
+#endif
+
+__ALIGN_BEGIN
+USB_OTG_CORE_HANDLE USB_OTG_dev
+__ALIGN_END;
 
 DigitalOut led1(PD_13);
-
 DigitalOut led2(PD_12);
-bool led2_on = false;
-
 DigitalOut led3(PD_14);
-bool led3_on = false;
-
-HID_REPORT send_report;
-HID_REPORT recv_report;
-
-#define SIZE 2
-
-static uint8_t data[SIZE];
 
 int main()
 {
-    ubot::UsbIf hid(SIZE, SIZE);
-    send_report.length = SIZE;
+    __IO uint32_t i = 0;
+    uint8_t buf[255];
+    uint8_t len;
 
-    do {
-        // Await usb connection
-    } while (!hid.configured());
+    USBD_Init(&USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc, &USBD_CDC_cb, &USR_cb);
 
-    led1 = 1;
+    VCP_send_str( (uint8_t *) "USB serial DEMO\n");
+    buf[0] = 't';
+    buf[1] = 'e';
+    buf[2] = 's';
+    buf[3] = 't';
+    buf[4] = 0;
 
-    while (1) {
-        //try to read a msg
-        if(hid.read(&recv_report)) {
-            if (recv_report.length > 0) {
-                led2 = led2_on ? 0 : 1;
-                led2_on != led2_on;
+    VCP_send_str(&buf[0]);
+    buf[0] = 0;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
 
-                for (uint32_t i = 0; i < recv_report.length; i++) {
-                    data[i] = recv_report.data[i];
-                }
-            }
+    while(1) {
+        len = VCP_get_string(&buf[0]);
+        if(len) {
+            VCP_send_str(&buf[0]);
+        }
 
-            //Fill the report
-            for (uint32_t i = 0; i < send_report.length; i++) {
-                send_report.data[i] = data[i];
-            }
+        if (i == 0x1000000) {
+            VCP_put_char('b');
+            led1 = 0;
+            led2 = 0;
+            led3 = 0;
+        }
 
-            //Send the report
-            if (hid.send(&send_report)) {
-                // led3 = led3_on ? 0 : 1;
-                // led3_on != led3_on;
-            }
+        if (i++ == 0x2000000) {
+            i = 0;
+            VCP_put_char('a');
+            led1 = 1;
+            led2 = 1;
+            led3 = 1;
         }
     }
 

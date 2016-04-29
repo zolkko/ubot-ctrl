@@ -7,9 +7,9 @@
 #include <PinNames.h>
 #include "pinmap.h"
 #include "enc.h"
-#include "motor_defs.h"
+// #include "motor_defs.h"
 
-
+/*
 
 typedef enum {
 #if defined(TIM8_BASE)
@@ -257,3 +257,4 @@ void ubot::Enc::handle_irq(void)
 int16_t ubot::Enc::get_velocity() const {
     return _speed.load();
 }
+*/
