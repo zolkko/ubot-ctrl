@@ -53,8 +53,7 @@ set(CMSIS_PATH "${MBED_PATH}/targets/cmsis")
 
 # set(MBED_USB_DEV_PATH "${THIRD_PARTY}/mbed/libraries/USBDevice")
 
-set(USB_PATH "${THIRD_PARTY}/stm32_usb_device_library")
-set(USB_OTG_PATH "${THIRD_PARTY}/stm32_usb_otg_driver")
+set(USB_DEV_LIB_PATH "${THIRD_PARTY}/STM32_USB_Device_Library")
 
 
 #
@@ -104,13 +103,10 @@ include_directories("${MBED_PATH}/targets/hal/TARGET_${VENDOR_NAME}/TARGET_${VEN
 # include_directories("${MBED_USB_DEV_PATH}/USBHID")
 
 #
-# STM32 USB OTG and Device Libraries
+# STM32 USB Device Library
 #
-include_directories("${USB_OTG_PATH}/inc")
-include_directories("${USB_PATH}/Core/Inc")
-include_directories("${USB_PATH}/Class/CDC/Inc")
-include_directories("${USB_PATH}/Class/CustomHID/Inc")
-include_directories("${USB_PATH}/Class/HID/Inc")
+include_directories("${USB_DEV_LIB_PATH}/Core/Inc")
+include_directories("${USB_DEV_LIB_PATH}/Class/CDC/Inc")
 
 #
 # MBED sdk and CMSIS source files
@@ -122,14 +118,11 @@ list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_dcmi.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_dcmi_ex.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_eth.c")
-list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_hcd.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_i2s.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_irda.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_nand.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_nor.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_pccard.c")
-list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_pcd.c")
-list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_pcd_ex.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_sd.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_sdram.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_smartcard.c")
@@ -137,7 +130,10 @@ list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_ll_fmc.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_ll_fsmc.c")
 list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_ll_sdmmc.c")
-list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_ll_usb.c")
+# list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_ll_usb.c")
+list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_hcd.c")
+# list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_pcd.c")
+# list(REMOVE_ITEM MBED_CMSIS_SRC "${MBED_PATH}/targets/cmsis/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/stm32f4xx_hal_pcd_ex.c")
 
 aux_source_directory("${MBED_PATH}/targets/hal/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}/TARGET_${VENDOR_BOARD}" MBED_HAL_BRD_SRC)
 aux_source_directory("${MBED_PATH}/targets/hal/TARGET_${VENDOR_NAME}/TARGET_${VENDOR_FAMILY}" MBED_HAL_SRC)
@@ -176,16 +172,13 @@ aux_source_directory("${MBED_PATH}/common" MBED_COMMON_SRC)
 # list(REMOVE_ITEM MBED_USB_DEV_SRC "${MBED_USB_DEV_PATH}/USBDevice/USBHAL_RZ_A1H.cpp")
 
 #
-# STM32 USB Driver Libraries
+# STM32 USB Device Library source files
 #
-aux_source_directory("${USB_OTG_PATH}/src" USB_OTG_SRC)
-list(REMOVE_ITEM USB_OTG_SRC "${USB_OTG_PATH}/src/usb_bsp_template.c")
-list(REMOVE_ITEM USB_OTG_SRC "${USB_OTG_PATH}/src/usb_hcd.c")
-list(REMOVE_ITEM USB_OTG_SRC "${USB_OTG_PATH}/src/usb_hcd_int.c")
-list(REMOVE_ITEM USB_OTG_SRC "${USB_OTG_PATH}/src/usb_otg.c")
-aux_source_directory("${USB_PATH}/Core/Src" USB_CORE_SRC)
-aux_source_directory("${USB_PATH}/Class/CDC/Src" USB_CDC_SRC)
-list(REMOVE_ITEM USB_CDC_SRC "${USB_PATH}/Class/CDC/Src/usbd_cdc_if_template.c")
+aux_source_directory("${USB_DEV_LIB_PATH}/Core/Src" USB_DEV_LIB_CORE_SRC)
+list(REMOVE_ITEM USB_DEV_LIB_CORE_SRC "${USB_DEV_LIB_PATH}/Core/Src/usbd_conf_template.c")
+
+aux_source_directory("${USB_DEV_LIB_PATH}/Class/CDC/Src" USB_DEV_LIB_CDC_SRC)
+list(REMOVE_ITEM USB_DEV_LIB_CDC_SRC "${USB_DEV_LIB_PATH}/Class/CDC/Src/usbd_cdc_if_template.c")
 
 #
 # Search for source files and add them to
@@ -211,7 +204,7 @@ add_executable(${PROJECT_NAME}.elf
     # MBED ARM Math
     # ${MBED_DSP_SRC}
     # USBD sources
-    ${USB_OTG_SRC} ${USB_CORE_SRC} ${USB_CDC_SRC}
+    ${USB_DEV_LIB_CORE_SRC} ${USB_DEV_LIB_CDC_SRC}
     # Project source files
     ${HW_SRC} ${APP_SRC})
 
