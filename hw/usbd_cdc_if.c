@@ -1,6 +1,14 @@
 #include "usbd_cdc_if.h"
 
 
+extern USBD_HandleTypeDef USBD_Device;
+
+#ifndef APP_RX_DATA_SIZE
+#define APP_RX_DATA_SIZE 100
+#endif
+
+static uint8_t UserRxBuffer[APP_RX_DATA_SIZE]; // Received Data over USB are stored in this buffer
+
 static int8_t TEMPLATE_Init(void);
 static int8_t TEMPLATE_DeInit(void);
 static int8_t TEMPLATE_Control(uint8_t cmd, uint8_t* pbuf, uint16_t length);
@@ -30,7 +38,15 @@ USBD_CDC_LineCodingTypeDef linecoding = {
   */
 static int8_t TEMPLATE_Init(void)
 {
-    return (0);
+    if (USBD_CDC_SetTxBuffer(&USBD_Device, NULL, 0) != USBD_OK) {
+        return USBD_FAIL;
+    }
+
+    if (USBD_CDC_SetRxBuffer(&USBD_Device, UserRxBuffer) != USBD_OK) {
+        return USBD_FAIL;
+    }
+
+    return USBD_OK;
 }
 
 /**
@@ -41,7 +57,7 @@ static int8_t TEMPLATE_Init(void)
   */
 static int8_t TEMPLATE_DeInit(void)
 {
-    return (0);
+    return USBD_OK;
 }
 
 
@@ -110,7 +126,7 @@ static int8_t TEMPLATE_Control  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
             break;
     }
 
-    return (0);
+    return USBD_OK;
 }
 
 /**
@@ -131,5 +147,5 @@ static int8_t TEMPLATE_Control  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   */
 static int8_t TEMPLATE_Receive(uint8_t* Buf, uint32_t *Len)
 {
-    return (0);
+    return USBD_FAIL;
 }

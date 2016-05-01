@@ -54,9 +54,6 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     // Set USBFS Interrupt to the lowest priority
     NVIC_SetPriority(OTG_FS_IRQn, 1);
     NVIC_SetVector(OTG_FS_IRQn, (uint32_t)&usb_isr);
-
-    // Enable USBFS Interrupt
-    // NVIC_EnableIRQ(OTG_FS_IRQn);
 }
 
 /**
@@ -213,6 +210,7 @@ USBD_StatusTypeDef USBD_LL_DeInit(USBD_HandleTypeDef *pdev)
   */
 USBD_StatusTypeDef USBD_LL_Start(USBD_HandleTypeDef *pdev)
 {
+    NVIC_EnableIRQ(OTG_FS_IRQn);
     return HAL_PCD_Start(pdev->pData) == HAL_OK ? USBD_OK : USBD_FAIL;
 }
 
@@ -223,6 +221,7 @@ USBD_StatusTypeDef USBD_LL_Start(USBD_HandleTypeDef *pdev)
   */
 USBD_StatusTypeDef USBD_LL_Stop(USBD_HandleTypeDef *pdev)
 {
+    NVIC_DisableIRQ(OTG_FS_IRQn);
     return HAL_PCD_Stop(pdev->pData) == HAL_OK ? USBD_OK : USBD_FAIL;
 }
 
