@@ -53,7 +53,11 @@ set(CMSIS_PATH "${MBED_PATH}/targets/cmsis")
 
 # set(MBED_USB_DEV_PATH "${THIRD_PARTY}/mbed/libraries/USBDevice")
 
-set(USB_DEV_LIB_PATH "${THIRD_PARTY}/STM32_USB_Device_Library")
+set(USB_DEV_LIB_PATH      "${THIRD_PARTY}/STM32_USB_Device_Library")
+set(USB_DEV_LIB_CORE_PATH "${USB_DEV_LIB_PATH}/Core")
+set(USB_DEV_LIB_CDC_PATH  "${USB_DEV_LIB_PATH}/Class/CDC")
+set(USB_DEV_LIB_HID_PATH  "${USB_DEV_LIB_PATH}/Class/HID")
+set(USB_DEV_LIB_CHID_PATH "${USB_DEV_LIB_PATH}/Class/CustomHID")
 
 
 #
@@ -105,8 +109,10 @@ include_directories("${MBED_PATH}/targets/hal/TARGET_${VENDOR_NAME}/TARGET_${VEN
 #
 # STM32 USB Device Library
 #
-include_directories("${USB_DEV_LIB_PATH}/Core/Inc")
-include_directories("${USB_DEV_LIB_PATH}/Class/CDC/Inc")
+include_directories("${USB_DEV_LIB_CORE_PATH}/Inc")
+include_directories("${USB_DEV_LIB_CDC_PATH}/Inc")
+# include_directories("${USB_DEV_LIB_HID_PATH}/Inc")
+# include_directories("${USB_DEV_LIB_CHID_PATH}/Inc")
 
 #
 # MBED sdk and CMSIS source files
@@ -190,11 +196,13 @@ aux_source_directory("${MBED_PATH}/common" MBED_COMMON_SRC)
 #
 # STM32 USB Device Library source files
 #
-aux_source_directory("${USB_DEV_LIB_PATH}/Core/Src" USB_DEV_LIB_CORE_SRC)
-list(REMOVE_ITEM USB_DEV_LIB_CORE_SRC "${USB_DEV_LIB_PATH}/Core/Src/usbd_conf_template.c")
-
-aux_source_directory("${USB_DEV_LIB_PATH}/Class/CDC/Src" USB_DEV_LIB_CDC_SRC)
-list(REMOVE_ITEM USB_DEV_LIB_CDC_SRC "${USB_DEV_LIB_PATH}/Class/CDC/Src/usbd_cdc_if_template.c")
+aux_source_directory("${USB_DEV_LIB_CORE_PATH}/Src" USB_DEV_LIB_CORE_SRC)
+list(REMOVE_ITEM USB_DEV_LIB_CORE_SRC "${USB_DEV_LIB_CORE_PATH}/Src/usbd_conf_template.c")
+aux_source_directory("${USB_DEV_LIB_CDC_PATH}/Src" USB_DEV_LIB_CDC_SRC)
+list(REMOVE_ITEM USB_DEV_LIB_CDC_SRC "${USB_DEV_LIB_CDC_PATH}/Src/usbd_cdc_if_template.c")
+#aux_source_directory("${USB_DEV_LIB_HID_PATH}/Src" USB_DEV_LIB_HID_SRC)
+#aux_source_directory("${USB_DEV_LIB_CHID_PATH}/Src" USB_DEV_LIB_CHID_SRC)
+#list(REMOVE_ITEM USB_DEV_LIB_CHID_SRC "${USB_DEV_LIB_CHID_PATH}/Src/usbd_customhid_if_template.c")
 
 #
 # Search for source files and add them to
@@ -219,8 +227,9 @@ add_executable(${PROJECT_NAME}.elf
     # ${MBED_USB_DEV_SRC} ${MBED_USB_SER_SRC} ${MBED_USB_HID_SRC}
     # MBED ARM Math
     # ${MBED_DSP_SRC}
-    # USBD sources
+    # STM32 USB Device Sources
     ${USB_DEV_LIB_CORE_SRC} ${USB_DEV_LIB_CDC_SRC}
+    # ${USB_DEV_LIB_HID_SRC} ${USB_DEV_LIB_CHID_SRC}
     # Project source files
     ${HW_SRC} ${APP_SRC})
 
@@ -235,11 +244,14 @@ target_link_libraries(${PROJECT_NAME}.elf -lstdc++)
 #
 # Force QtCreator to show header files
 #
-FILE(GLOB_RECURSE hw_headers_glob "hw/*.h")
-add_custom_target(hw_headers SOURCES ${hw_headers_glob})
-
-FILE(GLOB_RECURSE src_headers_glob "src/*.h")
-add_custom_target(src_headers SOURCES ${src_headers_glob})
+FILE(GLOB_RECURSE hw_headers_glob       "hw/*.h")
+FILE(GLOB_RECURSE src_headers_glob      "src/*.h")
+FILE(GLOB_RECURSE usb_core_headers_glob "${USB_DEV_LIB_CORE_PATH}/Inc/*.h")
+FILE(GLOB_RECURSE usb_cdc_headers_glob  "${USB_DEV_LIB_CDC_PATH}/Inc/*.h")
+FILE(GLOB_RECURSE usb_hid_headers_glob  "${USB_DEV_LIB_HID_PATH}/Inc/*.h")
+FILE(GLOB_RECURSE usb_chid_headers_glob "${USB_DEV_LIB_CHID_PATH}/Inc/*.h")
+add_custom_target(additional_headers
+    SOURCES ${hw_headers_glob} ${src_headers_glob} ${usb_core_headers_glob} ${usb_cdc_headers_glob} ${usb_hid_headers_glob} ${usb_chid_headers_glob})
 
 #
 # Define additional commands

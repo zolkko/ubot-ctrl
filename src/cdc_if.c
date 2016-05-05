@@ -1,4 +1,4 @@
-#include "usbd_cdc_if.h"
+#include "cdc_if.h"
 
 
 extern USBD_HandleTypeDef USBD_Device;

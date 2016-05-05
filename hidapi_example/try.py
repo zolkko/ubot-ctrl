@@ -5,7 +5,8 @@ import time
 
 
 dev = hid.device()
-dev.open_path('USB_1234_0001_14200000')
+dev.open_path('USB_1234_0001_1a121100')
+# dev.open_path('USB_1234_0001_1a122000')
 
 try:
     print 'Manufacturer: %s' % dev.get_manufacturer_string()
@@ -13,8 +14,8 @@ try:
     print 'Serial No: %s' % dev.get_serial_number_string()
 
     # try writing some data to the device
-    for k in range(255):
-        out_data = [0x0] + [k] * 2
+    for k in range(5):
+        out_data = [0x2] + [0xaa] * 24
         #print 'write data=', out_data
         r = dev.write(out_data)
         print 'write =', out_data[1:]
@@ -24,8 +25,6 @@ try:
             print 'read =', data
         else:
             print 'No read'
-
-        print 'diff =', out_data[0] - data[0]
         print '-----' 
 
         time.sleep(1.0)

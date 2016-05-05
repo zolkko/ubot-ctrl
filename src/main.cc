@@ -2,9 +2,9 @@
 #include <mbed.h>
 
 #include <usbd_core.h>
-#include <usbd_cdc_if.h>
 
 #include "usbd_desc.h"
+#include "hid_if.h"
 
 
 USBD_HandleTypeDef USBD_Device;
@@ -16,24 +16,18 @@ DigitalOut led3(PD_14);
 DigitalOut led4(PD_15);
 
 
-static uint8_t data[10];
-static uint16_t sz = 0;
+static uint8_t data[25];
 
 
 int main()
 {
     USBD_Init(&USBD_Device, &VCP_Desc, 0);
-    USBD_RegisterClass(&USBD_Device, USBD_CDC_CLASS);
-    USBD_CDC_RegisterInterface(&USBD_Device, &USBD_CDC_Template_fops);
+    USBD_RegisterClass(&USBD_Device, &USBD_UBOT_HID);
     USBD_Start(&USBD_Device);
 
-    data[0] = 't';
-    data[1] = 'e';
-    data[2] = 's';
-    data[3] = 't';
-    data[4] = '\r';
-    data[5] = '\n';
-    sz = 6;
+    // TODO: device must stay blocked unless connected
+
+    int i = 0;
 
     while (true) {
         led1 = !led1;
@@ -41,21 +35,20 @@ int main()
         led2 = !led2;
         wait(1);
 
-        // TODO: check that usb is connected
-        USBD_CDC_SetTxBuffer(&USBD_Device, (uint8_t *) &data, sz);
-        if (USBD_CDC_TransmitPacket(&USBD_Device) == USBD_OK) {
-            data[0] = 'Y';
-            data[1] = 'e';
-            data[2] = 's';
-            data[3] = '\r';
-            data[4] = '\n';
-            sz = 5;
+        for (int j = 1; j < sizeof(data); j++) {
+            data[j] = i;
+        }
+
+        // data[0] = 1;
+        // USBD_UBOT_HID_SendReport(&USBD_Device, (uint8_t *)&data, 3);
+
+        data[0] = 2;
+        USBD_UBOT_HID_SendReport(&USBD_Device, (uint8_t *)&data, 25);
+
+        if (i >= 100) {
+            i = 0;
         } else {
-            data[0] = 'N';
-            data[1] = 'o';
-            data[2] = '\r';
-            data[3] = '\n';
-            sz = 4;
+            i++;
         }
     }
 
