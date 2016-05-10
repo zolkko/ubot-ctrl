@@ -45,19 +45,18 @@ set(HW_PATH "${PROJECT_SOURCE_DIR}/hw")
 set(THIRD_PARTY "${PROJECT_SOURCE_DIR}/third_party")
 
 set(MBED_PATH "${THIRD_PARTY}/mbed/libraries/mbed")
-# set(DSP_PATH "${THIRD_PARTY}/mbed/libraries/dsp")
 set(CMSIS_PATH "${MBED_PATH}/targets/cmsis")
 
-# set(DSP_PID_PATH "${DSP_PATH}/cmsis_dsp/ControllerFunctions")
-# set(MBED_RTOS_PATH "${THIRD_PARTY}/mbed/libraries/rtos")
+set(DSP_PATH "${THIRD_PARTY}/mbed/libraries/dsp")
+set(DSP_PID_PATH "${DSP_PATH}/cmsis_dsp/ControllerFunctions")
 
-# set(MBED_USB_DEV_PATH "${THIRD_PARTY}/mbed/libraries/USBDevice")
+set(MBED_RTOS_PATH "${THIRD_PARTY}/mbed/libraries/rtos")
+
+set(MBED_USB_DEV_PATH "${THIRD_PARTY}/mbed/libraries/USBDevice")
 
 set(USB_DEV_LIB_PATH      "${THIRD_PARTY}/STM32_USB_Device_Library")
 set(USB_DEV_LIB_CORE_PATH "${USB_DEV_LIB_PATH}/Core")
 set(USB_DEV_LIB_CDC_PATH  "${USB_DEV_LIB_PATH}/Class/CDC")
-set(USB_DEV_LIB_HID_PATH  "${USB_DEV_LIB_PATH}/Class/HID")
-set(USB_DEV_LIB_CHID_PATH "${USB_DEV_LIB_PATH}/Class/CustomHID")
 
 
 #
@@ -91,8 +90,8 @@ include_directories("${MBED_PATH}/targets/hal/TARGET_${VENDOR_NAME}/TARGET_${VEN
 #
 # MBED RTOS
 #
-# include_directories("${MBED_RTOS_PATH}/rtos")
-# include_directories("${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M")
+include_directories("${MBED_RTOS_PATH}/rtos")
+include_directories("${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M")
 
 #
 # MBED Math
@@ -111,8 +110,6 @@ include_directories("${MBED_PATH}/targets/hal/TARGET_${VENDOR_NAME}/TARGET_${VEN
 #
 include_directories("${USB_DEV_LIB_CORE_PATH}/Inc")
 include_directories("${USB_DEV_LIB_CDC_PATH}/Inc")
-# include_directories("${USB_DEV_LIB_HID_PATH}/Inc")
-# include_directories("${USB_DEV_LIB_CHID_PATH}/Inc")
 
 #
 # MBED sdk and CMSIS source files
@@ -164,9 +161,9 @@ aux_source_directory("${MBED_PATH}/common" MBED_COMMON_SRC)
 #
 # MBED rtos source files
 #
-# aux_source_directory("${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC" MBED_RTX_HW_SRC)
-# aux_source_directory("${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M" MBED_RTX_SRC)
-# aux_source_directory("${MBED_RTOS_PATH}/rtos" MBED_RTOS_SRC)
+aux_source_directory("${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC" MBED_RTX_HW_SRC)
+aux_source_directory("${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M" MBED_RTX_SRC)
+aux_source_directory("${MBED_RTOS_PATH}/rtos" MBED_RTOS_SRC)
 
 #
 # DSP library source files
@@ -200,9 +197,6 @@ aux_source_directory("${USB_DEV_LIB_CORE_PATH}/Src" USB_DEV_LIB_CORE_SRC)
 list(REMOVE_ITEM USB_DEV_LIB_CORE_SRC "${USB_DEV_LIB_CORE_PATH}/Src/usbd_conf_template.c")
 aux_source_directory("${USB_DEV_LIB_CDC_PATH}/Src" USB_DEV_LIB_CDC_SRC)
 list(REMOVE_ITEM USB_DEV_LIB_CDC_SRC "${USB_DEV_LIB_CDC_PATH}/Src/usbd_cdc_if_template.c")
-#aux_source_directory("${USB_DEV_LIB_HID_PATH}/Src" USB_DEV_LIB_HID_SRC)
-#aux_source_directory("${USB_DEV_LIB_CHID_PATH}/Src" USB_DEV_LIB_CHID_SRC)
-#list(REMOVE_ITEM USB_DEV_LIB_CHID_SRC "${USB_DEV_LIB_CHID_PATH}/Src/usbd_customhid_if_template.c")
 
 #
 # Search for source files and add them to
@@ -220,16 +214,15 @@ add_executable(${PROJECT_NAME}.elf
     # MBED common and HAL
     ${MBED_HAL_SRC} ${MBED_HAL_BRD_SRC} ${MBED_COMMON_SRC}
     # MBED-rtos-classic (RTX)
-    # ${MBED_RTX_HW_SRC} ${MBED_RTX_SRC} ${MBED_RTOS_SRC}
-    # "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC/HAL_CM4.S"
-    # "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC/SVC_Table.S"
+    ${MBED_RTX_HW_SRC} ${MBED_RTX_SRC} ${MBED_RTOS_SRC}
+    "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC/HAL_CM4.S"
+    "${MBED_RTOS_PATH}/rtx/TARGET_CORTEX_M/TARGET_RTOS_M4_M7/TOOLCHAIN_GCC/SVC_Table.S"
     # MBED USBDevice and USBSerial
     # ${MBED_USB_DEV_SRC} ${MBED_USB_SER_SRC} ${MBED_USB_HID_SRC}
     # MBED ARM Math
     # ${MBED_DSP_SRC}
     # STM32 USB Device Sources
     ${USB_DEV_LIB_CORE_SRC} ${USB_DEV_LIB_CDC_SRC}
-    # ${USB_DEV_LIB_HID_SRC} ${USB_DEV_LIB_CHID_SRC}
     # Project source files
     ${HW_SRC} ${APP_SRC})
 
